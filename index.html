@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Подбор вентилятора — шаг 1 и 2</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #eef2f5;
+            font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
+            padding: 20px 16px 60px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* главный контейнер */
+        .app {
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        /* ========= СТРАНИЦЫ ========= */
+        .page {
+            display: none;
+            animation: fadePage 0.25s ease;
+        }
+
+        .page.active-page {
+            display: block;
+        }
+
+        @keyframes fadePage {
+            from { opacity: 0; transform: translateY(8px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+
+        /* ========= ШАГ 1 ========= */
+        h1 {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #0a2540;
+        }
+
+        .subhead {
+            text-align: center;
+            color: #5b6e8c;
+            margin-bottom: 32px;
+        }
+
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 28px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 30px rgba(0,0,0,0.1);
+        }
+
+        .card-img {
+            width: 100%;
+            height: 180px;
+            background: #f0f2f5;
+            overflow: hidden;
+        }
+
+        .card-img img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-info {
+            padding: 20px 18px 24px;
+        }
+
+        .card-title {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 18px;
+            line-height: 1.3;
+            color: #1e293b;
+        }
+
+        .card-btn {
+            background: #f97316;
+            color: white;
+            text-align: center;
+            padding: 10px;
+            border-radius: 40px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .card:hover .card-btn {
+            background: #ea580c;
+        }
+
+        /* ========= ШАГ 2 (анкета) ========= */
+        .step-track {
+            max-width: 600px;
+            margin: 0 auto 24px;
+        }
+
+        .step-progress {
+            background: #e0e7ed;
+            border-radius: 40px;
+            height: 8px;
+        }
+
+        .step-fill {
+            background: #f97316;
+            width: 50%;
+            height: 100%;
+            border-radius: 40px;
+        }
+
+        .step-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #475569;
+        }
+
+        .form-card {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 32px;
+            padding: 28px 24px 32px;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        }
+
+        .form-card h2 {
+            font-size: 26px;
+            font-weight: 600;
+            color: #0a2540;
+        }
+
+        .selected-tag {
+            background: #f1f5f9;
+            padding: 8px 16px;
+            border-radius: 40px;
+            font-size: 14px;
+            margin: 12px 0 24px;
+            display: inline-block;
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 12px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 60px;
+            margin-bottom: 32px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 8px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #334155;
+        }
+
+        .mode-btn.active {
+            background: white;
+            color: #f97316;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .form-panel {
+            display: none;
+        }
+
+        .form-panel.active-panel {
+            display: block;
+        }
+
+        .input-field {
+            margin-bottom: 24px;
+        }
+
+        label {
+            font-weight: 500;
+            display: block;
+            margin-bottom: 8px;
+            color: #0f2b3d;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 14px 70px 14px 16px;
+            font-size: 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+
+        .unit-badge {
+            position: absolute;
+            right: 16px;
+            top: 14px;
+            background: #f1f5f9;
+            padding: 4px 10px;
+            border-radius: 30px;
+            font-size: 13px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #6c7a91;
+            margin-top: 6px;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn-next {
+            background: #f97316;
+            width: 100%;
+            border: none;
+            padding: 16px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 18px;
+            color: white;
+            margin-top: 24px;
+            cursor: pointer;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link button {
+            background: none;
+            border: none;
+            color: #f97316;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 640px) {
+            .grid-cards { grid-template-columns: 1fr; }
+            .form-card { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <!-- ==================== СТРАНИЦА 1 (ВЫБОР ТИПА) ==================== -->
+    <div id="page1" class="page active-page">
+        <h1>Что будем вентилировать?</h1>
+        <div class="subhead">Выберите тип оборудования — дальше уточним параметры</div>
+
+        <div class="grid-cards">
+            <!-- КАРТОЧКА 1 -->
+            <div class="card" data-equipment="Радиальный вентилятор для покрасочной камеры">
+                <div class="card-img">
+                    <!-- 👇 СЮДА ВСТАВЬ ССЫЛКУ НА ФОТО (прямая .jpg/.png) -->
+                    <img src="https://via.placeholder.com/400x300?text=Покрасочная+камера" alt="покрасочная камера">
+                </div>
+                <div class="card-info">
+                    <div class="card-title">Радиальный вентилятор для покрасочной камеры</div>
+                    <div class="card-btn">Выбрать →</div>
+                </div>
+            </div>
+
+            <!-- КАРТОЧКА 2 -->
+            <div class="card" data-equipment="Радиальный вентилятор для кухонь, мангалов, зонтов">
+                <div class="card-img">
+                    <img src="https://via.placeholder.com/400x300?text=Кухня+мангал" alt="кухонный зонт">
+                </div>
+                <div class="card-info">
+                    <div class="card-title">Радиальный вентилятор для кухонь, мангалов, зонтов</div>
+                    <div class="card-btn">Выбрать →</div>
+                </div>
+            </div>
+
+            <!-- КАРТОЧКА 3 -->
+            <div class="card" data-equipment="Канальный вентилятор на приток">
+                <div class="card-img">
+                    <img src="https://via.placeholder.com/400x300?text=Приток+канальный" alt="приточный">
+                </div>
+                <div class="card-info">
+                    <div class="card-title">Канальный вентилятор на приток</div>
+                    <div class="card-btn">Выбрать →</div>
+                </div>
+            </div>
+
+            <!-- КАРТОЧКА 4 -->
+            <div class="card" data-equipment="Канальный вентилятор на вытяжку">
+                <div class="card-img">
+                    <img src="https://via.placeholder.com/400x300?text=Вытяжка+канальная" alt="вытяжка">
+                </div>
+                <div class="card-info">
+                    <div class="card-title">Канальный вентилятор на вытяжку</div>
+                    <div class="card-btn">Выбрать →</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== СТРАНИЦА 2 (ПАРАМЕТРЫ) ==================== -->
+    <div id="page2" class="page">
+        <div class="step-track">
+            <div class="step-progress"><div class="step-fill"></div></div>
+            <div class="step-text"><span>✅ Тип выбран</span><span><strong>⚙️ Параметры</strong></span><span>📋 Результат</span></div>
+        </div>
+
+        <div class="form-card">
+            <h2>Параметры системы</h2>
+            <div id="selectedEquipmentDisplay" class="selected-tag">—</div>
+
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="workpoint">🎯 Рабочая точка</button>
+                <button class="mode-btn" data-mode="room">📐 По помещению</button>
+            </div>
+
+            <!-- Рабочая точка -->
+            <div id="workpoint-panel" class="form-panel active-panel">
+                <div class="input-field">
+                    <label>Производительность</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="capacity" placeholder="1200">
+                        <span class="unit-badge">м³/ч</span>
+                    </div>
+                    <div class="hint">Объём воздуха в час</div>
+                </div>
+                <div class="input-field">
+                    <label>Давление</label>
+                    <div class="input-wrapper">
+                        <input type="number" id="pressure" placeholder="250">
+                        <span class="unit-badge">Па</span>
+                    </div>
+                    <div class="hint">Сопротивление сети</div>
+                </div>
+            </div>
+
+            <!-- По помещению -->
+            <div id="room-panel" class="form-panel">
+                <div class="grid-3">
+                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="width" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="length" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="height" placeholder="м"><span class="unit-badge">м</span></div></div>
+                </div>
+                <div class="input-field">
+                    <label>Расстояние от вентилятора до помещения</label>
+                    <div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div>
+                    <div class="hint">Длина воздуховода</div>
+                </div>
+            </div>
+
+            <button id="submitParamsBtn" class="btn-next">Получить результат →</button>
+            <div class="back-link"><button id="backToTypeBtn">← Вернуться к выбору типа</button></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ------ ЛОГИКА ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ ------
+    const page1 = document.getElementById('page1');
+    const page2 = document.getElementById('page2');
+    let selectedEquipment = "";
+
+    // Сохраняем выбранный вентилятор и переходим на стр.2
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            // не даём клику по кнопке-тексту внутри карточки вызвать дважды
+            e.stopPropagation();
+            selectedEquipment = card.getAttribute('data-equipment');
+            document.getElementById('selectedEquipmentDisplay').innerHTML = `🔧 ${selectedEquipment}`;
+            page1.classList.remove('active-page');
+            page2.classList.add('active-page');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    // Кнопка "назад" на стр.1
+    document.getElementById('backToTypeBtn').addEventListener('click', () => {
+        page2.classList.remove('active-page');
+        page1.classList.add('active-page');
+    });
+
+    // ------ ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ (рабочая точка / помещение) ------
+    const modeBtns = document.querySelectorAll('.mode-btn');
+    const workPanel = document.getElementById('workpoint-panel');
+    const roomPanelEl = document.getElementById('room-panel');
+
+    function setMode(mode) {
+        if (mode === 'workpoint') {
+            workPanel.classList.add('active-panel');
+            roomPanelEl.classList.remove('active-panel');
+        } else {
+            workPanel.classList.remove('active-panel');
+            roomPanelEl.classList.add('active-panel');
+        }
+        modeBtns.forEach(btn => {
+            const btnMode = btn.getAttribute('data-mode');
+            if (btnMode === mode) btn.classList.add('active');
+            else btn.classList.remove('active');
+        });
+    }
+
+    modeBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const mode = btn.getAttribute('data-mode');
+            setMode(mode);
+        });
+    });
+
+    // ------ КНОПКА "ПОЛУЧИТЬ РЕЗУЛЬТАТ" (валидация) ------
+    document.getElementById('submitParamsBtn').addEventListener('click', () => {
+        const isWorkpoint = workPanel.classList.contains('active-panel');
+
+        if (isWorkpoint) {
+            const cap = document.getElementById('capacity').value.trim();
+            const pres = document.getElementById('pressure').value.trim();
+            if (!cap && !pres) {
+                alert('Укажите хотя бы производительность (м³/ч) или давление (Па)');
+                return;
+            }
+            if (cap && parseFloat(cap) <= 0) return alert('Производительность > 0');
+            if (pres && parseFloat(pres) < 0) return alert('Давление не может быть отрицательным');
+        } else {
+            const w = document.getElementById('width').value.trim();
+            const l = document.getElementById('length').value.trim();
+            const h = document.getElementById('height').value.trim();
+            if (!w && !l && !h) {
+                alert('Заполните хотя бы два размера помещения');
+                return;
+            }
+            if ((w && parseFloat(w) <= 0) || (l && parseFloat(l) <= 0) || (h && parseFloat(h) <= 0))
+                return alert('Размеры должны быть больше 0');
+        }
+
+        // Здесь сейчас просто заглушка (шаг 3)
+        alert(`✅ Готово! Вы выбрали: ${selectedEquipment}\nДанные получены. Следующим шагом будет модель вентилятора.`);
+        // Позже заменим на переход на страницу 3 или подгрузку результата
+    });
+</script>
+</body>
+</html>
