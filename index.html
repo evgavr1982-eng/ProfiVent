@@ -370,8 +370,18 @@
         .selected-items-list span {
             font-weight: 600;
         }
+        .button-group {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .button-group .btn-secondary {
+            margin-top: 0;
+            flex: 1;
+        }
         @media (max-width: 640px) {
             .double-buttons { flex-direction: column; }
+            .button-group { flex-direction: column; }
         }
     </style>
 </head>
@@ -451,7 +461,11 @@
                 <label>Комментарий</label>
                 <div class="input-wrapper"><textarea id="contactComment" rows="3" placeholder="Дополнительная информация..."></textarea></div>
             </div>
-            <button id="sendFinalData" class="btn-next">Отправить заявку →</button>
+            <button id="sendToTelegramBtn" class="btn-next">📨 Отправить в Telegram</button>
+            <div class="button-group">
+                <button id="copyToClipboardBtn" class="btn-secondary">📋 Скопировать заявку</button>
+                <button id="sendToEmailBtn" class="btn-secondary">✉️ Отправить на почту</button>
+            </div>
             <div class="back-link"><button id="backToPrevFromContacts">← Назад</button></div>
         </div>
     </div>
@@ -468,92 +482,163 @@
     const pageAccessories = document.getElementById('pageAccessories');
     const pageContacts = document.getElementById('pageContacts');
 
-    // ---------- ОТПРАВКА ДАННЫХ (РАБОТАЕТ) ----------
-    async function sendDataToAllChannels(data) {
-        // Показываем сообщение о загрузке
-        let successDiv = document.querySelector('#pageContacts .success-message');
-        if (!successDiv) {
-            successDiv = document.createElement('div');
-            successDiv.className = 'success-message';
-            document.querySelector('#pageContacts .form-card').appendChild(successDiv);
-        }
-        successDiv.innerHTML = '⏳ Отправка данных...';
-        successDiv.classList.add('show');
-        successDiv.classList.remove('error');
+    // ---------- ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ ----------
+    function getFormattedOrderText() {
+        const name = document.getElementById('contactName')?.value.trim() || 'не указано';
+        const email = document.getElementById('contactEmail')?.value.trim() || 'не указан';
+        const city = document.getElementById('contactCity')?.value.trim() || 'не указан';
+        const phone = document.getElementById('contactPhone')?.value.trim() || 'не указан';
+        const comment = document.getElementById('contactComment')?.value.trim() || 'нет';
         
-        // Логируем в консоль (для отладки)
-        console.log('Отправляем заявку:', data);
-        
-        let emailSuccess = false;
-        let tgSuccess = false;
-        
-        // 1. Отправка на почту через FormSubmit (работает без CORS)
-        try {
-            const formData = new FormData();
-            formData.append('_subject', `Новая заявка: ${data.equipment}`);
-            formData.append('name', data.contacts.name);
-            formData.append('email', data.contacts.email);
-            formData.append('city', data.contacts.city);
-            formData.append('phone', data.contacts.phone || 'не указан');
-            formData.append('comment', data.contacts.comment || 'нет');
-            formData.append('equipment', data.equipment);
-            formData.append('params', JSON.stringify(data.params, null, 2));
-            formData.append('accessories', data.accessories?.join(', ') || 'нет');
-            formData.append('_captcha', 'false');
-            
-            const response = await fetch('https://formsubmit.co/ajax/mirovik@mir-ovik.ru', {
-                method: 'POST',
-                body: formData
-            });
-            if (response.ok) emailSuccess = true;
-            console.log('Почта:', response.ok ? '✅' : '❌');
-        } catch(e) {
-            console.error('Ошибка почты:', e);
+        let paramsText = '';
+        if (currentParams.capacity || currentParams.pressure) {
+            paramsText = `Рабочая точка:\n  • Производительность: ${currentParams.capacity || 'не указано'} м³/ч\n  • Давление: ${currentParams.pressure || 'не указано'} Па`;
+        } else {
+            paramsText = `По помещению:\n  • Ширина: ${currentParams.width || 'не указано'} м\n  • Длина: ${currentParams.length || 'не указано'} м\n  • Высота: ${currentParams.height || 'не указано'} м\n  • Расстояние: ${currentParams.distance || 'не указано'} м`;
         }
         
-        // 2. Отправка в Telegram
+        return `🔔 НОВАЯ ЗАЯВКА\n\n📌 Тип оборудования: ${currentEquipment}\n\n📊 Параметры:\n${paramsText}\n\n📦 Принадлежности: ${selectedAccessories.length > 0 ? selectedAccessories.join(', ') : 'не выбраны'}\n\n👤 Контактные данные:\n  • Имя: ${name}\n  • Email: ${email}\n  • Город: ${city}\n  • Телефон: ${phone}\n  • Комментарий: ${comment}`;
+    }
+    
+    function getOrderDataForEmail() {
+        const name = document.getElementById('contactName')?.value.trim() || '';
+        const email = document.getElementById('contactEmail')?.value.trim() || '';
+        const city = document.getElementById('contactCity')?.value.trim() || '';
+        const phone = document.getElementById('contactPhone')?.value.trim() || '';
+        const comment = document.getElementById('contactComment')?.value.trim() || '';
+        
+        let paramsText = '';
+        if (currentParams.capacity || currentParams.pressure) {
+            paramsText = `Рабочая точка: ${currentParams.capacity || '?'} м³/ч, ${currentParams.pressure || '?'} Па`;
+        } else {
+            paramsText = `По помещению: ${currentParams.width || '?'}x${currentParams.length || '?'}x${currentParams.height || '?'} м, расстояние ${currentParams.distance || '?'} м`;
+        }
+        
+        return {
+            to: 'mirovik@mir-ovik.ru',
+            subject: `Заявка на вентиляцию: ${currentEquipment}`,
+            body: `Новая заявка с сайта\n\nТип оборудования: ${currentEquipment}\nПараметры: ${paramsText}\nПринадлежности: ${selectedAccessories.join(', ') || 'нет'}\n\nКонтактные данные:\nИмя: ${name}\nEmail: ${email}\nГород: ${city}\nТелефон: ${phone}\nКомментарий: ${comment}`
+        };
+    }
+    
+    // ---------- ОТПРАВКА В TELEGRAM ----------
+    async function sendToTelegram() {
+        const name = document.getElementById('contactName')?.value.trim();
+        const email = document.getElementById('contactEmail')?.value.trim();
+        const city = document.getElementById('contactCity')?.value.trim();
+        
+        if (!name || !email || !city) {
+            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
+            return false;
+        }
+        
+        const text = getFormattedOrderText();
+        const botToken = '8128144029:AAHjJ-qgE7Y0B-WA68T8HwK4mi7kEewRk-Q';
+        const chatId = '950937319';
+        
         try {
-            const botToken = '8128144029:AAHjJ-qgE7Y0B-WA68T8HwK4mi7kEewRk-Q';
-            const chatId = '950937319';
-            const text = `🔔 НОВАЯ ЗАЯВКА\n\n📌 Тип: ${data.equipment}\n📊 Параметры:\n${JSON.stringify(data.params, null, 2)}\n📦 Принадлежности: ${data.accessories?.join(', ') || 'нет'}\n\n👤 Контакты:\nИмя: ${data.contacts.name}\nEmail: ${data.contacts.email}\nГород: ${data.contacts.city}\nТелефон: ${data.contacts.phone || 'не указан'}\nКомментарий: ${data.contacts.comment || 'нет'}`;
-            
             const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, text: text })
             });
-            if (response.ok) tgSuccess = true;
-            console.log('Telegram:', response.ok ? '✅' : '❌');
+            if (response.ok) {
+                return true;
+            } else {
+                console.error('Telegram error:', await response.text());
+                return false;
+            }
         } catch(e) {
-            console.error('Ошибка Telegram:', e);
+            console.error('Telegram exception:', e);
+            return false;
+        }
+    }
+    
+    // ---------- ПОКАЗ СООБЩЕНИЯ ----------
+    function showMessage(text, isError = false) {
+        let msgDiv = document.querySelector('#pageContacts .success-message');
+        if (!msgDiv) {
+            msgDiv = document.createElement('div');
+            msgDiv.className = 'success-message';
+            document.querySelector('#pageContacts .form-card').appendChild(msgDiv);
+        }
+        msgDiv.innerHTML = text;
+        msgDiv.classList.add('show');
+        if (isError) {
+            msgDiv.classList.add('error');
+        } else {
+            msgDiv.classList.remove('error');
+        }
+        setTimeout(() => {
+            msgDiv.classList.remove('show');
+        }, 4000);
+    }
+    
+    // ---------- КНОПКИ НА СТРАНИЦЕ 3 ----------
+    document.getElementById('sendToTelegramBtn').addEventListener('click', async () => {
+        const name = document.getElementById('contactName')?.value.trim();
+        const email = document.getElementById('contactEmail')?.value.trim();
+        const city = document.getElementById('contactCity')?.value.trim();
+        
+        if (!name || !email || !city) {
+            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
+            return;
         }
         
-        // Результат
-        if (emailSuccess || tgSuccess) {
-            successDiv.innerHTML = '✅ Заявка успешно отправлена! Наш менеджер свяжется с вами.';
-            successDiv.classList.remove('error');
-            // Очищаем форму
+        showMessage('⏳ Отправка в Telegram...');
+        const success = await sendToTelegram();
+        if (success) {
+            showMessage('✅ Заявка отправлена в Telegram! Менеджер свяжется с вами.');
+            // Очистка формы
             document.getElementById('contactName').value = '';
             document.getElementById('contactEmail').value = '';
             document.getElementById('contactCity').value = '';
             document.getElementById('contactPhone').value = '';
             document.getElementById('contactComment').value = '';
-            
             setTimeout(() => {
                 pageContacts.classList.remove('active-page');
                 page1.classList.add('active-page');
-                successDiv.classList.remove('show');
-            }, 3000);
+            }, 2000);
         } else {
-            successDiv.innerHTML = '❌ Ошибка отправки. Пожалуйста, попробуйте позже или позвоните нам.';
-            successDiv.classList.add('error');
-            setTimeout(() => {
-                successDiv.classList.remove('show');
-            }, 5000);
+            showMessage('❌ Ошибка отправки в Telegram. Попробуйте скопировать заявку вручную.', true);
         }
-    }
+    });
     
-    // ---------- ОТРИСОВКА СТРАНИЦЫ 2 (ПАРАМЕТРЫ) ----------
+    document.getElementById('copyToClipboardBtn').addEventListener('click', () => {
+        const name = document.getElementById('contactName')?.value.trim();
+        const email = document.getElementById('contactEmail')?.value.trim();
+        const city = document.getElementById('contactCity')?.value.trim();
+        
+        if (!name || !email || !city) {
+            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
+            return;
+        }
+        
+        const text = getFormattedOrderText();
+        navigator.clipboard.writeText(text).then(() => {
+            showMessage('📋 Заявка скопирована в буфер обмена! Вы можете вставить её в письмо или мессенджер.');
+        }).catch(() => {
+            showMessage('❌ Не удалось скопировать', true);
+        });
+    });
+    
+    document.getElementById('sendToEmailBtn').addEventListener('click', () => {
+        const name = document.getElementById('contactName')?.value.trim();
+        const email = document.getElementById('contactEmail')?.value.trim();
+        const city = document.getElementById('contactCity')?.value.trim();
+        
+        if (!name || !email || !city) {
+            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
+            return;
+        }
+        
+        const data = getOrderDataForEmail();
+        const mailtoLink = `mailto:${data.to}?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.body)}`;
+        window.location.href = mailtoLink;
+        showMessage('✉️ Открывается почтовый клиент. Отправьте письмо менеджеру.');
+    });
+    
+    // ---------- ОТРИСОВКА СТРАНИЦЫ 2 ----------
     function renderStep2() {
         const container = document.getElementById('dynamicContent');
         container.innerHTML = `
@@ -683,7 +768,6 @@
         window.scrollTo(0,0);
     });
     
-    // ---------- ПОКАЗ СТРАНИЦЫ КОНТАКТОВ С ОТОБРАЖЕНИЕМ ВЫБРАННОГО ----------
     function showContactsPage() {
         document.getElementById('selectedEquipmentContacts').innerHTML = `🔧 ${currentEquipment}`;
         const accessoriesDiv = document.getElementById('selectedAccessoriesDisplay');
@@ -695,66 +779,7 @@
         }
     }
     
-    // ---------- ОТПРАВКА С 3-Й СТРАНИЦЫ ----------
-    document.getElementById('sendFinalData').addEventListener('click', () => {
-        const name = document.getElementById('contactName')?.value.trim();
-        const email = document.getElementById('contactEmail')?.value.trim();
-        const city = document.getElementById('contactCity')?.value.trim();
-        
-        if (!name) { alert('Пожалуйста, укажите ваше имя'); return; }
-        if (!email) { alert('Пожалуйста, укажите email для связи'); return; }
-        if (!city) { alert('Пожалуйста, укажите ваш город'); return; }
-        
-        sendDataToAllChannels({
-            equipment: currentEquipment,
-            params: currentParams,
-            accessories: selectedAccessories,
-            contacts: {
-                name: name,
-                email: email,
-                city: city,
-                phone: document.getElementById('contactPhone')?.value || '',
-                comment: document.getElementById('contactComment')?.value || ''
-            }
-        });
-    });
-    
     document.getElementById('backToPrevFromContacts').addEventListener('click', () => {
         if (selectedAccessories.length > 0) {
             pageContacts.classList.remove('active-page');
-            pageAccessories.classList.add('active-page');
-        } else {
-            pageContacts.classList.remove('active-page');
-            page2.classList.add('active-page');
-        }
-        window.scrollTo(0,0);
-    });
-    
-    // ---------- ПЕРЕХОДЫ С ГЛАВНОЙ ----------
-    document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentEquipment = card.getAttribute('data-equipment');
-            document.getElementById('selectedEquipmentDisplay').innerHTML = `🔧 ${currentEquipment}`;
-            if (currentEquipment === "Принадлежности к вентиляции") {
-                selectedAccessories = [];
-                currentParams = {};
-                renderAccessoriesPage();
-                page1.classList.remove('active-page');
-                pageAccessories.classList.add('active-page');
-            } else {
-                renderStep2();
-                page1.classList.remove('active-page');
-                page2.classList.add('active-page');
-            }
-            window.scrollTo(0,0);
-        });
-    });
-    
-    document.getElementById('backToTypeBtn').addEventListener('click', () => {
-        page2.classList.remove('active-page');
-        page1.classList.add('active-page');
-    });
-</script>
-</body>
-</html>
+           
