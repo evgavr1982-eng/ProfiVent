@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Подбор вентилятора — шаг 1 и 2</title>
+    <title>Подбор вентиляции — отправка данных</title>
     <style>
         * {
             margin: 0;
@@ -20,13 +20,11 @@
             min-height: 100vh;
         }
 
-        /* главный контейнер */
         .app {
             max-width: 1200px;
             width: 100%;
         }
 
-        /* ========= СТРАНИЦЫ ========= */
         .page {
             display: none;
             animation: fadePage 0.25s ease;
@@ -41,7 +39,6 @@
             to { opacity: 1; transform: translateY(0);}
         }
 
-        /* ========= ШАГ 1 ========= */
         h1 {
             font-size: 28px;
             text-align: center;
@@ -114,9 +111,8 @@
             background: #ea580c;
         }
 
-        /* ========= ШАГ 2 (анкета) ========= */
         .step-track {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto 24px;
         }
 
@@ -142,7 +138,7 @@
         }
 
         .form-card {
-            max-width: 600px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
             border-radius: 32px;
@@ -214,15 +210,21 @@
             position: relative;
         }
 
-        .input-wrapper input {
+        .input-wrapper input, .input-wrapper textarea {
             width: 100%;
             padding: 14px 70px 14px 16px;
             font-size: 16px;
             border: 1.5px solid #e2e8f0;
             border-radius: 20px;
+            font-family: inherit;
         }
 
-        .input-wrapper input:focus {
+        .input-wrapper textarea {
+            padding: 14px 16px;
+            resize: vertical;
+        }
+
+        .input-wrapper input:focus, .input-wrapper textarea:focus {
             outline: none;
             border-color: #f97316;
         }
@@ -260,6 +262,12 @@
             color: white;
             margin-top: 24px;
             cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-next:hover {
+            background: #ea580c;
+            transform: scale(0.98);
         }
 
         .back-link {
@@ -277,203 +285,377 @@
             text-decoration: underline;
         }
 
+        .accessories-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .accessory-cat {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 16px;
+            border: 1px solid #e2e8f0;
+            transition: 0.2s;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .accessory-cat:hover {
+            background: #fff7ed;
+            border-color: #f97316;
+        }
+
+        .accessory-cat h4 {
+            color: #0a2540;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .tooltip-items {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 120%;
+            left: 0;
+            background: #1e293b;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 13px;
+            width: 260px;
+            z-index: 100;
+            transition: 0.2s;
+            pointer-events: none;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        .accessory-cat:hover .tooltip-items {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .tooltip-items ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .tooltip-items li {
+            margin: 6px 0;
+        }
+
+        .contact-form {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 2px solid #e2e8f0;
+        }
+
+        .contact-form h4 {
+            margin-bottom: 16px;
+            color: #0a2540;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 16px;
+            border-radius: 16px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
         @media (max-width: 640px) {
             .grid-cards { grid-template-columns: 1fr; }
             .form-card { padding: 20px; }
+            .tooltip-items { width: 220px; bottom: 110%; }
         }
     </style>
 </head>
 <body>
 <div class="app">
-    <!-- ==================== СТРАНИЦА 1 (ВЫБОР ТИПА) ==================== -->
     <div id="page1" class="page active-page">
         <h1>Что будем вентилировать?</h1>
-        <div class="subhead">Выберите тип оборудования — дальше уточним параметры</div>
-
+        <div class="subhead">Выберите тип оборудования</div>
         <div class="grid-cards">
-            <!-- КАРТОЧКА 1 -->
-            <div class="card" data-equipment="Радиальный вентилятор для покрасочной камеры">
+            <div class="card" data-equipment="Покрасочная камера, гараж, малярный цех">
                 <div class="card-img">
-                    <!-- 👇 СЮДА ВСТАВЬ ССЫЛКУ НА ФОТО (прямая .jpg/.png) -->
                     <img src="https://via.placeholder.com/400x300?text=Покрасочная+камера" alt="покрасочная камера">
                 </div>
                 <div class="card-info">
-                    <div class="card-title">Радиальный вентилятор для покрасочной камеры</div>
+                    <div class="card-title">Покрасочная камера, гараж, малярный цех</div>
                     <div class="card-btn">Выбрать →</div>
                 </div>
             </div>
-
-            <!-- КАРТОЧКА 2 -->
-            <div class="card" data-equipment="Радиальный вентилятор для кухонь, мангалов, зонтов">
+            <div class="card" data-equipment="Кухня, мангал, вытяжные зонты">
                 <div class="card-img">
-                    <img src="https://via.placeholder.com/400x300?text=Кухня+мангал" alt="кухонный зонт">
+                    <img src="https://via.placeholder.com/400x300?text=Кухня+мангал" alt="кухонные зонты">
                 </div>
                 <div class="card-info">
-                    <div class="card-title">Радиальный вентилятор для кухонь, мангалов, зонтов</div>
+                    <div class="card-title">Кухня, мангал, вытяжные зонты</div>
                     <div class="card-btn">Выбрать →</div>
                 </div>
             </div>
-
-            <!-- КАРТОЧКА 3 -->
-            <div class="card" data-equipment="Канальный вентилятор на приток">
+            <div class="card" data-equipment="Промышленные объекты, Коммерческие/жилые/Складские помещения">
                 <div class="card-img">
-                    <img src="https://via.placeholder.com/400x300?text=Приток+канальный" alt="приточный">
+                    <img src="https://via.placeholder.com/400x300?text=Промышленные+склады" alt="промышленная вентиляция">
                 </div>
                 <div class="card-info">
-                    <div class="card-title">Канальный вентилятор на приток</div>
+                    <div class="card-title">Промышленные объекты, Коммерческие/жилые/Складские помещения</div>
                     <div class="card-btn">Выбрать →</div>
                 </div>
             </div>
-
-            <!-- КАРТОЧКА 4 -->
-            <div class="card" data-equipment="Канальный вентилятор на вытяжку">
+            <div class="card" data-equipment="Принадлежности к вентиляции">
                 <div class="card-img">
-                    <img src="https://via.placeholder.com/400x300?text=Вытяжка+канальная" alt="вытяжка">
+                    <img src="https://via.placeholder.com/400x300?text=Принадлежности" alt="принадлежности">
                 </div>
                 <div class="card-info">
-                    <div class="card-title">Канальный вентилятор на вытяжку</div>
+                    <div class="card-title">Принадлежности к вентиляции</div>
                     <div class="card-btn">Выбрать →</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ==================== СТРАНИЦА 2 (ПАРАМЕТРЫ) ==================== -->
     <div id="page2" class="page">
         <div class="step-track">
             <div class="step-progress"><div class="step-fill"></div></div>
-            <div class="step-text"><span>✅ Тип выбран</span><span><strong>⚙️ Параметры</strong></span><span>📋 Результат</span></div>
+            <div class="step-text"><span>✅ Тип выбран</span><span><strong>⚙️ Параметры</strong></span><span>📋 Отправка</span></div>
         </div>
-
-        <div class="form-card">
-            <h2>Параметры системы</h2>
+        <div class="form-card" id="dynamicFormCard">
+            <h2 id="formTitle">Параметры системы</h2>
             <div id="selectedEquipmentDisplay" class="selected-tag">—</div>
-
-            <div class="mode-switch">
-                <button class="mode-btn active" data-mode="workpoint">🎯 Рабочая точка</button>
-                <button class="mode-btn" data-mode="room">📐 По помещению</button>
-            </div>
-
-            <!-- Рабочая точка -->
-            <div id="workpoint-panel" class="form-panel active-panel">
-                <div class="input-field">
-                    <label>Производительность</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="capacity" placeholder="1200">
-                        <span class="unit-badge">м³/ч</span>
-                    </div>
-                    <div class="hint">Объём воздуха в час</div>
-                </div>
-                <div class="input-field">
-                    <label>Давление</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="pressure" placeholder="250">
-                        <span class="unit-badge">Па</span>
-                    </div>
-                    <div class="hint">Сопротивление сети</div>
-                </div>
-            </div>
-
-            <!-- По помещению -->
-            <div id="room-panel" class="form-panel">
-                <div class="grid-3">
-                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="width" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="length" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="height" placeholder="м"><span class="unit-badge">м</span></div></div>
-                </div>
-                <div class="input-field">
-                    <label>Расстояние от вентилятора до помещения</label>
-                    <div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div>
-                    <div class="hint">Длина воздуховода</div>
-                </div>
-            </div>
-
-            <button id="submitParamsBtn" class="btn-next">Получить результат →</button>
+            <div id="dynamicContent"></div>
             <div class="back-link"><button id="backToTypeBtn">← Вернуться к выбору типа</button></div>
         </div>
     </div>
 </div>
 
 <script>
-    // ------ ЛОГИКА ПЕРЕКЛЮЧЕНИЯ СТРАНИЦ ------
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
-    let selectedEquipment = "";
+    const dynamicContent = document.getElementById('dynamicContent');
+    const formTitle = document.getElementById('formTitle');
+    const selectedSpan = document.getElementById('selectedEquipmentDisplay');
+    let currentEquipment = "";
 
-    // Сохраняем выбранный вентилятор и переходим на стр.2
+    // Функция отправки данных
+    async function sendDataToAllChannels(data) {
+        const successDiv = document.createElement('div');
+        successDiv.className = 'success-message';
+        successDiv.innerHTML = '⏳ Отправка данных...';
+        document.getElementById('dynamicContent').appendChild(successDiv);
+
+        // 1. Отправка на почту (через FormSubmit или EmailJS)
+        const emailData = new FormData();
+        emailData.append('email', 'mirovik@mir-ovik.ru');
+        emailData.append('subject', `Новая заявка: ${data.equipment}`);
+        emailData.append('message', JSON.stringify(data, null, 2));
+        
+        try {
+            await fetch('https://formsubmit.co/ajax/mirovik@mir-ovik.ru', {
+                method: 'POST',
+                body: emailData
+            });
+        } catch(e) { console.log('Email error:', e); }
+
+        // 2. Отправка в Max (webhook)
+        try {
+            await fetch('https://max.ru/u/f9LHodD0cOIfnSLWgCL1zo6ijnaEZH77T42aAj3narkuj90SpwYVUYtnSuE', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+        } catch(e) { console.log('Max error:', e); }
+
+        // 3. Отправка в Telegram (через бота)
+        const botToken = '8128144029:AAHjJ-qgE7Y0B-WA68T8HwK4mi7kEewRk-Q';
+        const chatId = '950937319';
+        const text = `🔔 НОВАЯ ЗАЯВКА\n\n📌 Тип: ${data.equipment}\n📊 Данные:\n${JSON.stringify(data.params, null, 2)}\n👤 Контакт: ${data.contacts.name || 'Не указан'} | ${data.contacts.phone || 'Не указан'}`;
+        
+        try {
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: text })
+            });
+        } catch(e) { console.log('Telegram error:', e); }
+
+        successDiv.innerHTML = '✅ Заявка успешно отправлена! Наш менеджер свяжется с вами в ближайшее время.';
+        successDiv.classList.add('show');
+        setTimeout(() => {
+            successDiv.remove();
+            page2.classList.remove('active-page');
+            page1.classList.add('active-page');
+        }, 3000);
+    }
+
+    function renderStep2(equipment) {
+        if (equipment === "Принадлежности к вентиляции") {
+            formTitle.innerText = "Выберите тип принадлежностей";
+            dynamicContent.innerHTML = `
+                <div class="accessories-grid">
+                    ${renderAccessory("Воздуховоды и элементы их монтажа", ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны и подвесы", "уплотнители и герметики"])}
+                    ${renderAccessory("Устройства для распределения и регулировки воздуха", ["решётки", "диффузоры", "анемостаты", "клапаны и заслонки"])}
+                    ${renderAccessory("Устройства для очистки и подготовки воздуха", ["фильтры", "рекуператоры", "увлажнители/осушители", "ионизаторы/озонаторы"])}
+                    ${renderAccessory("Нагревательные и охлаждающие элементы", ["калориферы (нагреватели)", "охладители"])}
+                    ${renderAccessory("Шумо- и виброзащита", ["шумоглушители", "виброизоляторы"])}
+                    ${renderAccessory("Контрольно‑измерительные и управляющие устройства", ["датчики", "регуляторы и контроллеры", "приводы клапанов", "щиты управления"])}
+                    ${renderAccessory("Вспомогательные и защитные элементы", ["дефлекторы", "вытяжные зонты", "люки и дверцы", "смесительные узлы", "дренажные системы"])}
+                </div>
+                <div class="contact-form">
+                    <h4>📞 Оставьте контакты для связи</h4>
+                    <div class="input-field">
+                        <label>Ваше имя</label>
+                        <div class="input-wrapper"><input type="text" id="accessoryName" placeholder="Иван Иванов"></div>
+                    </div>
+                    <div class="input-field">
+                        <label>Телефон или Telegram</label>
+                        <div class="input-wrapper"><input type="text" id="accessoryPhone" placeholder="+7 XXX XXX XX XX"></div>
+                    </div>
+                    <div class="input-field">
+                        <label>Комментарий (какие категории интересны)</label>
+                        <div class="input-wrapper"><textarea id="accessoryComment" rows="3" placeholder="Напишите, что именно нужно..."></textarea></div>
+                    </div>
+                </div>
+                <button id="submitAccessoriesBtn" class="btn-next">Отправить заявку →</button>
+            `;
+            setTimeout(() => {
+                const btn = document.getElementById('submitAccessoriesBtn');
+                if(btn) btn.onclick = () => {
+                    const name = document.getElementById('accessoryName')?.value || '';
+                    const phone = document.getElementById('accessoryPhone')?.value || '';
+                    const comment = document.getElementById('accessoryComment')?.value || '';
+                    sendDataToAllChannels({
+                        equipment: currentEquipment,
+                        params: { comment: comment, selected_categories: "см. комментарий" },
+                        contacts: { name: name, phone: phone }
+                    });
+                };
+            }, 10);
+        } 
+        else {
+            formTitle.innerText = "Параметры системы";
+            dynamicContent.innerHTML = `
+                <div class="mode-switch">
+                    <button class="mode-btn active" data-mode="workpoint">🎯 Рабочая точка</button>
+                    <button class="mode-btn" data-mode="room">📐 По помещению</button>
+                </div>
+                <div id="workpoint-panel" class="form-panel active-panel">
+                    <div class="input-field">
+                        <label>Производительность</label>
+                        <div class="input-wrapper"><input type="number" id="capacity" placeholder="1200"><span class="unit-badge">м³/ч</span></div>
+                        <div class="hint">Объём воздуха в час</div>
+                    </div>
+                    <div class="input-field">
+                        <label>Давление</label>
+                        <div class="input-wrapper"><input type="number" id="pressure" placeholder="250"><span class="unit-badge">Па</span></div>
+                        <div class="hint">Сопротивление сети</div>
+                    </div>
+                </div>
+                <div id="room-panel" class="form-panel">
+                    <div class="grid-3">
+                        <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="width" placeholder="м"><span class="unit-badge">м</span></div></div>
+                        <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="length" placeholder="м"><span class="unit-badge">м</span></div></div>
+                        <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="height" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    </div>
+                    <div class="input-field">
+                        <label>Расстояние от вентилятора до помещения</label>
+                        <div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div>
+                        <div class="hint">Длина воздуховода</div>
+                    </div>
+                </div>
+                <div class="contact-form">
+                    <h4>📞 Оставьте контакты для получения расчёта</h4>
+                    <div class="input-field">
+                        <label>Ваше имя</label>
+                        <div class="input-wrapper"><input type="text" id="userName" placeholder="Иван Иванов"></div>
+                    </div>
+                    <div class="input-field">
+                        <label>Телефон</label>
+                        <div class="input-wrapper"><input type="text" id="userPhone" placeholder="+7 XXX XXX XX XX"></div>
+                    </div>
+                </div>
+                <button id="submitParamsBtn" class="btn-next">Отправить заявку →</button>
+            `;
+            setTimeout(() => {
+                const modeBtns = document.querySelectorAll('.mode-btn');
+                const workPanel = document.getElementById('workpoint-panel');
+                const roomPanelEl = document.getElementById('room-panel');
+                function setMode(mode) {
+                    if (mode === 'workpoint') {
+                        workPanel.classList.add('active-panel');
+                        roomPanelEl.classList.remove('active-panel');
+                    } else {
+                        workPanel.classList.remove('active-panel');
+                        roomPanelEl.classList.add('active-panel');
+                    }
+                    modeBtns.forEach(btn => {
+                        const btnMode = btn.getAttribute('data-mode');
+                        if (btnMode === mode) btn.classList.add('active');
+                        else btn.classList.remove('active');
+                    });
+                }
+                modeBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => setMode(btn.getAttribute('data-mode')));
+                });
+                document.getElementById('submitParamsBtn').addEventListener('click', () => {
+                    const isWorkpoint = workPanel.classList.contains('active-panel');
+                    let params = {};
+                    if (isWorkpoint) {
+                        params.capacity = document.getElementById('capacity')?.value || '';
+                        params.pressure = document.getElementById('pressure')?.value || '';
+                    } else {
+                        params.width = document.getElementById('width')?.value || '';
+                        params.length = document.getElementById('length')?.value || '';
+                        params.height = document.getElementById('height')?.value || '';
+                        params.distance = document.getElementById('distance')?.value || '';
+                    }
+                    const name = document.getElementById('userName')?.value || '';
+                    const phone = document.getElementById('userPhone')?.value || '';
+                    if (!name && !phone) {
+                        alert('Пожалуйста, оставьте имя или телефон для связи');
+                        return;
+                    }
+                    sendDataToAllChannels({
+                        equipment: currentEquipment,
+                        params: params,
+                        contacts: { name: name, phone: phone }
+                    });
+                });
+            }, 10);
+        }
+    }
+
+    function renderAccessory(title, items) {
+        return `
+            <div class="accessory-cat">
+                <h4>📦 ${title}</h4>
+                <div class="tooltip-items"><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul></div>
+                <div style="font-size:13px; color:#f97316; margin-top:8px;">👆 наведите для списка</div>
+            </div>
+        `;
+    }
+
     document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('click', (e) => {
-            // не даём клику по кнопке-тексту внутри карточки вызвать дважды
             e.stopPropagation();
-            selectedEquipment = card.getAttribute('data-equipment');
-            document.getElementById('selectedEquipmentDisplay').innerHTML = `🔧 ${selectedEquipment}`;
+            currentEquipment = card.getAttribute('data-equipment');
+            selectedSpan.innerHTML = `🔧 ${currentEquipment}`;
+            renderStep2(currentEquipment);
             page1.classList.remove('active-page');
             page2.classList.add('active-page');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
 
-    // Кнопка "назад" на стр.1
     document.getElementById('backToTypeBtn').addEventListener('click', () => {
         page2.classList.remove('active-page');
         page1.classList.add('active-page');
-    });
-
-    // ------ ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ (рабочая точка / помещение) ------
-    const modeBtns = document.querySelectorAll('.mode-btn');
-    const workPanel = document.getElementById('workpoint-panel');
-    const roomPanelEl = document.getElementById('room-panel');
-
-    function setMode(mode) {
-        if (mode === 'workpoint') {
-            workPanel.classList.add('active-panel');
-            roomPanelEl.classList.remove('active-panel');
-        } else {
-            workPanel.classList.remove('active-panel');
-            roomPanelEl.classList.add('active-panel');
-        }
-        modeBtns.forEach(btn => {
-            const btnMode = btn.getAttribute('data-mode');
-            if (btnMode === mode) btn.classList.add('active');
-            else btn.classList.remove('active');
-        });
-    }
-
-    modeBtns.forEach(btn => {
-        btn.addEventListener('click', (e) => {
-            const mode = btn.getAttribute('data-mode');
-            setMode(mode);
-        });
-    });
-
-    // ------ КНОПКА "ПОЛУЧИТЬ РЕЗУЛЬТАТ" (валидация) ------
-    document.getElementById('submitParamsBtn').addEventListener('click', () => {
-        const isWorkpoint = workPanel.classList.contains('active-panel');
-
-        if (isWorkpoint) {
-            const cap = document.getElementById('capacity').value.trim();
-            const pres = document.getElementById('pressure').value.trim();
-            if (!cap && !pres) {
-                alert('Укажите хотя бы производительность (м³/ч) или давление (Па)');
-                return;
-            }
-            if (cap && parseFloat(cap) <= 0) return alert('Производительность > 0');
-            if (pres && parseFloat(pres) < 0) return alert('Давление не может быть отрицательным');
-        } else {
-            const w = document.getElementById('width').value.trim();
-            const l = document.getElementById('length').value.trim();
-            const h = document.getElementById('height').value.trim();
-            if (!w && !l && !h) {
-                alert('Заполните хотя бы два размера помещения');
-                return;
-            }
-            if ((w && parseFloat(w) <= 0) || (l && parseFloat(l) <= 0) || (h && parseFloat(h) <= 0))
-                return alert('Размеры должны быть больше 0');
-        }
-
-        // Здесь сейчас просто заглушка (шаг 3)
-        alert(`✅ Готово! Вы выбрали: ${selectedEquipment}\nДанные получены. Следующим шагом будет модель вентилятора.`);
-        // Позже заменим на переход на страницу 3 или подгрузку результата
     });
 </script>
 </body>
