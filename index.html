@@ -39,7 +39,6 @@
             to { opacity: 1; transform: translateY(0);}
         }
 
-        /* Прогресс-бар */
         .step-track {
             margin-bottom: 24px;
         }
@@ -62,7 +61,6 @@
             color: #475569;
         }
 
-        /* Карточки */
         h1 {
             font-size: 28px;
             text-align: center;
@@ -125,7 +123,6 @@
             background: #ea580c;
         }
 
-        /* Формы */
         .form-card {
             background: white;
             border-radius: 32px;
@@ -265,7 +262,6 @@
             text-decoration: underline;
         }
 
-        /* Принадлежности — аккордеон с чекбоксами */
         .accessories-grid {
             display: flex;
             flex-direction: column;
@@ -321,7 +317,6 @@
             cursor: pointer;
         }
 
-        /* Hover-подсказка для кнопок принадлежностей */
         .tooltip-wrapper {
             position: relative;
             flex: 1;
@@ -360,6 +355,16 @@
         }
         .success-message.show {
             display: block;
+        }
+        .selected-items-list {
+            background: #f1f5f9;
+            padding: 12px 16px;
+            border-radius: 20px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        .selected-items-list span {
+            font-weight: 600;
         }
         @media (max-width: 640px) {
             .double-buttons { flex-direction: column; }
@@ -421,6 +426,7 @@
         <div class="form-card">
             <h2>Оставьте контакты</h2>
             <div id="selectedEquipmentContacts" class="selected-tag">—</div>
+            <div id="selectedAccessoriesDisplay" class="selected-items-list" style="display:none;"></div>
             <div class="input-field">
                 <label><span class="required-star">*</span> Ваше имя</label>
                 <div class="input-wrapper"><input type="text" id="contactName" placeholder="Иван Иванов"></div>
@@ -450,8 +456,8 @@
 <script>
     // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
     let currentEquipment = "";
-    let currentParams = {};        // параметры со 2-й страницы
-    let selectedAccessories = [];   // выбранные принадлежности
+    let currentParams = {};
+    let selectedAccessories = [];
     
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
@@ -465,30 +471,52 @@
         successDiv.innerHTML = '⏳ Отправка данных...';
         document.querySelector('#pageContacts .form-card').appendChild(successDiv);
         
-        // 1. Почта
-        const emailData = new FormData();
-        emailData.append('email', 'mirovik@mir-ovik.ru');
-        emailData.append('subject', `Заявка: ${data.equipment}`);
-        emailData.append('message', JSON.stringify(data, null, 2));
-        try { await fetch('https://formsubmit.co/ajax/mirovik@mir-ovik.ru', { method: 'POST', body: emailData }); } catch(e) {}
-        
-        // 2. Max webhook
-        try { await fetch('https://max.ru/u/f9LHodD0cOIfnSLWgCL1zo6ijnaEZH77T42aAj3narkuj90SpwYVUYtnSuE', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch(e) {}
-        
-        // 3. Telegram
-        const botToken = '8128144029:AAHjJ-qgE7Y0B-WA68T8HwK4mi7kEewRk-Q';
-        const chatId = '950937319';
-        const text = `🔔 НОВАЯ ЗАЯВКА\n\n📌 Тип: ${data.equipment}\n📊 Параметры:\n${JSON.stringify(data.params, null, 2)}\n📦 Принадлежности: ${data.accessories?.join(', ') || 'нет'}\n\n👤 Контакты:\nИмя: ${data.contacts.name}\nEmail: ${data.contacts.email}\nГород: ${data.contacts.city}\nТелефон: ${data.contacts.phone || 'не указан'}\nКомментарий: ${data.contacts.comment || 'нет'}`;
-        try { await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: text }) }); } catch(e) {}
-        
-        successDiv.innerHTML = '✅ Заявка успешно отправлена! Наш менеджер свяжется с вами.';
-        successDiv.classList.add('show');
-        setTimeout(() => {
-            pageContacts.classList.remove('active-page');
-            page1.classList.add('active-page');
-        }, 3000);
+        try {
+            // 1. Почта
+            const emailData = new FormData();
+            emailData.append('email', 'mirovik@mir-ovik.ru');
+            emailData.append('subject', `Заявка: ${data.equipment}`);
+            emailData.append('message', JSON.stringify(data, null, 2));
+            await fetch('https://formsubmit.co/ajax/mirovik@mir-ovik.ru', { method: 'POST', body: emailData });
+            
+            // 2. Max webhook
+            await fetch('https://max.ru/u/f9LHodD0cOIfnSLWgCL1zo6ijnaEZH77T42aAj3narkuj90SpwYVUYtnSuE', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify(data) 
+            });
+            
+            // 3. Telegram
+            const botToken = '8128144029:AAHjJ-qgE7Y0B-WA68T8HwK4mi7kEewRk-Q';
+            const chatId = '950937319';
+            const text = `🔔 НОВАЯ ЗАЯВКА\n\n📌 Тип: ${data.equipment}\n📊 Параметры:\n${JSON.stringify(data.params, null, 2)}\n📦 Принадлежности: ${data.accessories?.join(', ') || 'нет'}\n\n👤 Контакты:\nИмя: ${data.contacts.name}\nEmail: ${data.contacts.email}\nГород: ${data.contacts.city}\nТелефон: ${data.contacts.phone || 'не указан'}\nКомментарий: ${data.contacts.comment || 'нет'}`;
+            await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ chat_id: chatId, text: text }) 
+            });
+            
+            successDiv.innerHTML = '✅ Заявка успешно отправлена! Наш менеджер свяжется с вами.';
+            successDiv.classList.add('show');
+            setTimeout(() => {
+                pageContacts.classList.remove('active-page');
+                page1.classList.add('active-page');
+                // Очищаем форму
+                document.getElementById('contactName').value = '';
+                document.getElementById('contactEmail').value = '';
+                document.getElementById('contactCity').value = '';
+                document.getElementById('contactPhone').value = '';
+                document.getElementById('contactComment').value = '';
+            }, 3000);
+        } catch(e) {
+            successDiv.innerHTML = '❌ Ошибка отправки. Пожалуйста, попробуйте позже.';
+            successDiv.style.background = '#fee2e2';
+            successDiv.style.color = '#991b1b';
+            successDiv.classList.add('show');
+            console.error(e);
+        }
     }
-
+    
     // ---------- ОТРИСОВКА СТРАНИЦЫ 2 (ПАРАМЕТРЫ) ----------
     function renderStep2() {
         const container = document.getElementById('dynamicContent');
@@ -526,7 +554,6 @@
             </div>
         `;
         
-        // Переключение режимов
         const modeBtns = document.querySelectorAll('.mode-btn');
         const workPanel = document.getElementById('workpoint-panel');
         const roomPanelEl = document.getElementById('room-panel');
@@ -537,7 +564,6 @@
         }
         modeBtns.forEach(btn => btn.addEventListener('click', (e) => setMode(btn.getAttribute('data-mode'))));
         
-        // Сбор параметров и переход
         function collectParams() {
             const isWorkpoint = workPanel.classList.contains('active-panel');
             let params = {};
@@ -564,14 +590,14 @@
         document.getElementById('withoutAccessoriesBtn').addEventListener('click', () => {
             currentParams = collectParams();
             selectedAccessories = [];
-            renderContactsPage();
+            showContactsPage();
             page2.classList.remove('active-page');
             pageContacts.classList.add('active-page');
             window.scrollTo(0,0);
         });
     }
     
-    // ---------- СТРАНИЦА ПРИНАДЛЕЖНОСТЕЙ (аккордеон с чекбоксами) ----------
+    // ---------- КАТЕГОРИИ ПРИНАДЛЕЖНОСТЕЙ ----------
     const categories = [
         { name: "Воздуховоды и элементы их монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны и подвесы", "уплотнители и герметики"] },
         { name: "Устройства для распределения и регулировки воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны и заслонки"] },
@@ -599,9 +625,7 @@
                 </div>
             `;
             const header = div.querySelector('.accessory-header');
-            header.addEventListener('click', () => {
-                div.classList.toggle('open');
-            });
+            header.addEventListener('click', () => { div.classList.toggle('open'); });
             container.appendChild(div);
         });
     }
@@ -611,7 +635,7 @@
         document.querySelectorAll('.accessory-items input:checked').forEach(cb => {
             selectedAccessories.push(cb.value);
         });
-        renderContactsPage();
+        showContactsPage();
         pageAccessories.classList.remove('active-page');
         pageContacts.classList.add('active-page');
         window.scrollTo(0,0);
@@ -623,19 +647,28 @@
         window.scrollTo(0,0);
     });
     
-    // ---------- СТРАНИЦА КОНТАКТОВ ----------
-    function renderContactsPage() {
+    // ---------- ПОКАЗ СТРАНИЦЫ КОНТАКТОВ С ОТОБРАЖЕНИЕМ ВЫБРАННОГО ----------
+    function showContactsPage() {
         document.getElementById('selectedEquipmentContacts').innerHTML = `🔧 ${currentEquipment}`;
+        const accessoriesDiv = document.getElementById('selectedAccessoriesDisplay');
+        if (selectedAccessories.length > 0) {
+            accessoriesDiv.style.display = 'block';
+            accessoriesDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
+        } else {
+            accessoriesDiv.style.display = 'none';
+        }
     }
     
+    // ---------- ОТПРАВКА С 3-Й СТРАНИЦЫ (ИСПРАВЛЕНО) ----------
     document.getElementById('sendFinalData').addEventListener('click', () => {
         const name = document.getElementById('contactName')?.value.trim();
         const email = document.getElementById('contactEmail')?.value.trim();
         const city = document.getElementById('contactCity')?.value.trim();
-        if (!name || !email || !city) {
-            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
-            return;
-        }
+        
+        if (!name) { alert('Пожалуйста, укажите ваше имя'); return; }
+        if (!email) { alert('Пожалуйста, укажите email для связи'); return; }
+        if (!city) { alert('Пожалуйста, укажите ваш город'); return; }
+        
         sendDataToAllChannels({
             equipment: currentEquipment,
             params: currentParams,
@@ -661,14 +694,13 @@
         window.scrollTo(0,0);
     });
     
-    // ---------- ПЕРЕХОДЫ ----------
+    // ---------- ПЕРЕХОДЫ С ГЛАВНОЙ ----------
     document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('click', (e) => {
             e.stopPropagation();
             currentEquipment = card.getAttribute('data-equipment');
             document.getElementById('selectedEquipmentDisplay').innerHTML = `🔧 ${currentEquipment}`;
             if (currentEquipment === "Принадлежности к вентиляции") {
-                // отдельный режим для принадлежностей
                 selectedAccessories = [];
                 currentParams = {};
                 renderAccessoriesPage();
