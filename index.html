@@ -47,14 +47,12 @@
             border-radius: 40px;
             height: 8px;
             overflow: hidden;
-            backdrop-filter: blur(4px);
         }
         .step-fill {
             background: linear-gradient(90deg, #f97316, #ea580c);
             height: 100%;
             border-radius: 40px;
             transition: width 0.4s ease;
-            box-shadow: 0 0 6px rgba(249,115,22,0.4);
         }
         .step-text {
             display: flex;
@@ -136,6 +134,7 @@
             display: inline-block;
             width: auto;
             box-shadow: 0 2px 6px rgba(249,115,22,0.3);
+            pointer-events: none; /* Чтобы клик срабатывал на всю карточку */
         }
         .card:hover .card-btn {
             background: #ea580c;
@@ -587,27 +586,34 @@
         const kitchenBlock = document.getElementById('kitchenBlock');
         kitchenBlock.style.display = isKitchen ? 'block' : 'none';
         const hoodsSection = document.getElementById('hoodsSection');
-        hoodsSection.classList.remove('show');
+        if(hoodsSection) hoodsSection.classList.remove('show');
         const hasHoodsCheck = document.getElementById('hasHoods');
         if(hasHoodsCheck) hasHoodsCheck.checked = false;
-        document.getElementById('hoodsContainer').innerHTML = '';
+        const hoodsContainer = document.getElementById('hoodsContainer');
+        if(hoodsContainer) hoodsContainer.innerHTML = '';
         hoodsData = [];
         if(isKitchen) {
-            document.getElementById('hasHoods').onchange = (e) => {
-                if(e.target.checked) hoodsSection.classList.add('show');
-                else { hoodsSection.classList.remove('show'); document.getElementById('hoodsContainer').innerHTML = ''; hoodsData = []; }
-            };
-            document.getElementById('hoodsCount').oninput = (e) => {
-                let c = parseInt(e.target.value) || 1;
-                if(c>10) c=10; if(c<1) c=1;
-                generateHoods(c);
-            };
+            const hasHoods = document.getElementById('hasHoods');
+            const hoodsCount = document.getElementById('hoodsCount');
+            if(hasHoods) {
+                hasHoods.onchange = (e) => {
+                    if(e.target.checked) hoodsSection.classList.add('show');
+                    else { hoodsSection.classList.remove('show'); if(hoodsContainer) hoodsContainer.innerHTML = ''; hoodsData = []; }
+                };
+            }
+            if(hoodsCount) {
+                hoodsCount.oninput = (e) => {
+                    let c = parseInt(e.target.value) || 1;
+                    if(c>10) c=10; if(c<1) c=1;
+                    generateHoods(c);
+                };
+            }
         }
     }
 
     // СБОР ПАРАМЕТРОВ
     function collectParams() {
-        const isWork = document.querySelector('#workPanel').classList.contains('show');
+        const isWork = document.querySelector('#workPanel')?.classList.contains('show');
         let p = {};
         if(isWork) {
             p.capacity = document.getElementById('capacity')?.value || '';
@@ -622,14 +628,18 @@
             p.hasHoods = true;
             p.hoodsCount = document.getElementById('hoodsCount')?.value || 0;
             p.hoods = hoodsData.filter(h => h.w || h.l || h.h);
+        } else {
+            p.hasHoods = false;
         }
         return p;
     }
 
     // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ (АККОРДЕОН)
     function renderAccessories() {
-        document.getElementById('accTitle').innerHTML = `🔧 ${currentEquipment}`;
+        const accTitle = document.getElementById('accTitle');
+        if(accTitle) accTitle.innerHTML = `🔧 ${currentEquipment}`;
         const container = document.getElementById('accessoriesList');
+        if(!container) return;
         container.innerHTML = '';
         categories.forEach(cat => {
             const div = document.createElement('div');
@@ -643,21 +653,24 @@
 
     // ПОКАЗ КОНТАКТОВ
     function showContacts() {
-        document.getElementById('contactTitle').innerHTML = `🔧 ${currentEquipment}`;
+        const contactTitle = document.getElementById('contactTitle');
+        if(contactTitle) contactTitle.innerHTML = `🔧 ${currentEquipment}`;
         const accDiv = document.getElementById('selectedAccList');
-        if(selectedAccessories.length) {
-            accDiv.style.display = 'block';
-            accDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
-        } else accDiv.style.display = 'none';
+        if(accDiv) {
+            if(selectedAccessories.length) {
+                accDiv.style.display = 'block';
+                accDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
+            } else accDiv.style.display = 'none';
+        }
     }
 
     // ФОРМИРОВАНИЕ ЗАЯВКИ
     function getOrderText() {
-        const name = document.getElementById('userName').value.trim() || 'не указано';
-        const email = document.getElementById('userEmail').value.trim() || 'не указан';
-        const city = document.getElementById('userCity').value.trim() || 'не указан';
-        const phone = document.getElementById('userPhone').value.trim() || 'не указан';
-        const comment = document.getElementById('userComment').value.trim() || 'нет';
+        const name = document.getElementById('userName')?.value.trim() || 'не указано';
+        const email = document.getElementById('userEmail')?.value.trim() || 'не указан';
+        const city = document.getElementById('userCity')?.value.trim() || 'не указан';
+        const phone = document.getElementById('userPhone')?.value.trim() || 'не указан';
+        const comment = document.getElementById('userComment')?.value.trim() || 'нет';
         let paramsText = '';
         if(currentParams.capacity) paramsText = `Рабочая точка: ${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
         else paramsText = `По помещению: ${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, расстояние ${currentParams.distance||'?'} м`;
@@ -684,11 +697,11 @@ ${paramsText}${hoodsText}
     }
 
     function getMailLink() {
-        const name = document.getElementById('userName').value.trim() || '';
-        const email = document.getElementById('userEmail').value.trim() || '';
-        const city = document.getElementById('userCity').value.trim() || '';
-        const phone = document.getElementById('userPhone').value.trim() || '';
-        const comment = document.getElementById('userComment').value.trim() || '';
+        const name = document.getElementById('userName')?.value.trim() || '';
+        const email = document.getElementById('userEmail')?.value.trim() || '';
+        const city = document.getElementById('userCity')?.value.trim() || '';
+        const phone = document.getElementById('userPhone')?.value.trim() || '';
+        const comment = document.getElementById('userComment')?.value.trim() || '';
         let paramsText = '';
         if(currentParams.capacity) paramsText = `${currentParams.capacity} м³/ч, ${currentParams.pressure||'?'} Па`;
         else paramsText = `${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, ${currentParams.distance||'?'} м`;
@@ -700,37 +713,10 @@ ${paramsText}${hoodsText}
 
     function showMessage(text, isError=false) {
         const msg = document.getElementById('msg');
-        msg.innerHTML = text;
-        msg.classList.add('show');
-        msg.style.background = isError ? '#fee2e2' : '#d1fae5';
-        msg.style.color = isError ? '#991b1b' : '#065f46';
-        setTimeout(() => msg.classList.remove('show'), 3500);
-    }
-
-    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ
-    function initModeSwitch() {
-        const workBtn = document.querySelector('[data-mode="work"]');
-        const roomBtn = document.querySelector('[data-mode="room"]');
-        const workPanel = document.getElementById('workPanel');
-        const roomPanel = document.getElementById('roomPanel');
-        workBtn.onclick = () => { workBtn.classList.add('active'); roomBtn.classList.remove('active'); workPanel.classList.add('show'); roomPanel.classList.remove('show'); };
-        roomBtn.onclick = () => { roomBtn.classList.add('active'); workBtn.classList.remove('active'); roomPanel.classList.add('show'); workPanel.classList.remove('show'); };
-    }
-
-    // ПЕРЕХОДЫ ПО КАРТОЧКАМ
-    document.querySelectorAll('.card').forEach(card => {
-        card.onclick = () => {
-            currentEquipment = card.getAttribute('data-equipment');
-            if(currentEquipment === "Принадлежности к вентиляции") {
-                currentParams = {};
-                selectedAccessories = [];
-                renderAccessories();
-                page1.classList.remove('active');
-                pageAcc.classList.add('active');
-            } else {
-                renderPage2();
-                page1.classList.remove('active');
-                page2.classList.add('active');
-                initModeSwitch();
-            }
+        if(msg) {
+            msg.innerHTML = text;
+            msg.classList.add('show');
+            msg.style.background = isError ? '#fee2e2' : '#d1fae5';
+            msg.style.color = isError ? '#991b1b' : '#065f46';
+            setTimeout(() => msg.classList.remove('show'), 3500);
        
