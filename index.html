@@ -134,7 +134,7 @@
             display: inline-block;
             width: auto;
             box-shadow: 0 2px 6px rgba(249,115,22,0.3);
-            pointer-events: none; /* Чтобы клик срабатывал на всю карточку */
+            pointer-events: none;
         }
         .card:hover .card-btn {
             background: #ea580c;
@@ -480,9 +480,9 @@
             </div>
             <div id="roomPanel" class="form-panel">
                 <div class="grid-3">
-                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="roomW" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="roomL" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="roomH" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Ширина помещения</label><div class="input-wrapper"><input type="number" id="roomW" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Длина помещения</label><div class="input-wrapper"><input type="number" id="roomL" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Высота помещения</label><div class="input-wrapper"><input type="number" id="roomH" placeholder="м"><span class="unit-badge">м</span></div></div>
                 </div>
                 <div class="input-field"><label>Расстояние от вентилятора до помещения</label><div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div></div>
             </div>
@@ -538,13 +538,14 @@
 </div>
 
 <script>
+    // ==================== ВЕСЬ JAVASCRIPT КОД ====================
     // ДАННЫЕ
     let currentEquipment = "";
     let currentParams = {};
     let selectedAccessories = [];
     let hoodsData = [];
 
-    // ЭЛЕМЕНТЫ
+    // ЭЛЕМЕНТЫ СТРАНИЦ
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
     const pageAcc = document.getElementById('pageAcc');
@@ -561,124 +562,182 @@
         { name: "🛠️ Вспомогательные элементы", items: ["дефлекторы", "зонты", "люки", "дренаж"] }
     ];
 
-    // ГЕНЕРАЦИЯ ПОЛЕЙ ЗОНТОВ
+    // ГЕНЕРАЦИЯ ПОЛЕЙ ДЛЯ ЗОНТОВ
     function generateHoods(count) {
         const container = document.getElementById('hoodsContainer');
-        if(!container) return;
+        if (!container) return;
         container.innerHTML = '';
         hoodsData = [];
-        for(let i=0; i<count; i++) {
-            hoodsData.push({w:'', l:'', h:''});
+        for (let i = 0; i < count; i++) {
+            hoodsData.push({ w: '', l: '', h: '' });
             const div = document.createElement('div');
             div.className = 'hood-item';
-            div.innerHTML = `<div class="hood-title">📐 Зонт ${i+1}</div><div class="grid-3"><div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" class="hw${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div><div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" class="hl${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div><div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" class="hh${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div></div>`;
+            div.innerHTML = `
+                <div class="hood-title">📐 Зонт ${i + 1}</div>
+                <div class="grid-3">
+                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" class="hood-w-${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div>
+                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" class="hood-l-${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div>
+                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" class="hood-h-${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div>
+                </div>
+            `;
             container.appendChild(div);
-            document.querySelector(`.hw${i}`)?.addEventListener('input', (e) => hoodsData[i].w = e.target.value);
-            document.querySelector(`.hl${i}`)?.addEventListener('input', (e) => hoodsData[i].l = e.target.value);
-            document.querySelector(`.hh${i}`)?.addEventListener('input', (e) => hoodsData[i].h = e.target.value);
+            // Сохраняем данные при вводе
+            const wInput = div.querySelector(`.hood-w-${i}`);
+            const lInput = div.querySelector(`.hood-l-${i}`);
+            const hInput = div.querySelector(`.hood-h-${i}`);
+            if (wInput) wInput.addEventListener('input', (e) => { hoodsData[i].w = e.target.value; });
+            if (lInput) lInput.addEventListener('input', (e) => { hoodsData[i].l = e.target.value; });
+            if (hInput) hInput.addEventListener('input', (e) => { hoodsData[i].h = e.target.value; });
         }
     }
 
     // ОТРИСОВКА СТРАНИЦЫ 2
     function renderPage2() {
-        document.getElementById('selectedTitle').innerHTML = `🔧 ${currentEquipment}`;
+        const selectedTitle = document.getElementById('selectedTitle');
+        if (selectedTitle) selectedTitle.innerHTML = `🔧 ${currentEquipment}`;
+        
         const isKitchen = (currentEquipment === "Вентиляция для Кухни");
         const kitchenBlock = document.getElementById('kitchenBlock');
-        kitchenBlock.style.display = isKitchen ? 'block' : 'none';
+        if (kitchenBlock) kitchenBlock.style.display = isKitchen ? 'block' : 'none';
+        
+        // Сброс состояния зонтов
         const hoodsSection = document.getElementById('hoodsSection');
-        if(hoodsSection) hoodsSection.classList.remove('show');
+        if (hoodsSection) hoodsSection.classList.remove('show');
         const hasHoodsCheck = document.getElementById('hasHoods');
-        if(hasHoodsCheck) hasHoodsCheck.checked = false;
+        if (hasHoodsCheck) hasHoodsCheck.checked = false;
         const hoodsContainer = document.getElementById('hoodsContainer');
-        if(hoodsContainer) hoodsContainer.innerHTML = '';
+        if (hoodsContainer) hoodsContainer.innerHTML = '';
         hoodsData = [];
-        if(isKitchen) {
+
+        if (isKitchen) {
             const hasHoods = document.getElementById('hasHoods');
             const hoodsCount = document.getElementById('hoodsCount');
-            if(hasHoods) {
+            if (hasHoods) {
                 hasHoods.onchange = (e) => {
-                    if(e.target.checked) hoodsSection.classList.add('show');
-                    else { hoodsSection.classList.remove('show'); if(hoodsContainer) hoodsContainer.innerHTML = ''; hoodsData = []; }
+                    if (e.target.checked) {
+                        if (hoodsSection) hoodsSection.classList.add('show');
+                    } else {
+                        if (hoodsSection) hoodsSection.classList.remove('show');
+                        if (hoodsContainer) hoodsContainer.innerHTML = '';
+                        hoodsData = [];
+                    }
                 };
             }
-            if(hoodsCount) {
+            if (hoodsCount) {
                 hoodsCount.oninput = (e) => {
                     let c = parseInt(e.target.value) || 1;
-                    if(c>10) c=10; if(c<1) c=1;
+                    if (c > 10) c = 10;
+                    if (c < 1) c = 1;
                     generateHoods(c);
                 };
             }
         }
     }
 
-    // СБОР ПАРАМЕТРОВ
+    // СБОР ПАРАМЕТРОВ СО СТРАНИЦЫ 2
     function collectParams() {
-        const isWork = document.querySelector('#workPanel')?.classList.contains('show');
+        const workPanel = document.getElementById('workPanel');
+        const isWork = workPanel ? workPanel.classList.contains('show') : true;
         let p = {};
-        if(isWork) {
-            p.capacity = document.getElementById('capacity')?.value || '';
-            p.pressure = document.getElementById('pressure')?.value || '';
+        if (isWork) {
+            const capacity = document.getElementById('capacity');
+            const pressure = document.getElementById('pressure');
+            p.capacity = capacity ? capacity.value : '';
+            p.pressure = pressure ? pressure.value : '';
         } else {
-            p.roomW = document.getElementById('roomW')?.value || '';
-            p.roomL = document.getElementById('roomL')?.value || '';
-            p.roomH = document.getElementById('roomH')?.value || '';
-            p.distance = document.getElementById('distance')?.value || '';
+            const roomW = document.getElementById('roomW');
+            const roomL = document.getElementById('roomL');
+            const roomH = document.getElementById('roomH');
+            const distance = document.getElementById('distance');
+            p.roomW = roomW ? roomW.value : '';
+            p.roomL = roomL ? roomL.value : '';
+            p.roomH = roomH ? roomH.value : '';
+            p.distance = distance ? distance.value : '';
         }
-        if(currentEquipment === "Вентиляция для Кухни" && document.getElementById('hasHoods')?.checked) {
-            p.hasHoods = true;
-            p.hoodsCount = document.getElementById('hoodsCount')?.value || 0;
-            p.hoods = hoodsData.filter(h => h.w || h.l || h.h);
-        } else {
-            p.hasHoods = false;
+        
+        if (currentEquipment === "Вентиляция для Кухни") {
+            const hasHoodsCheck = document.getElementById('hasHoods');
+            if (hasHoodsCheck && hasHoodsCheck.checked) {
+                p.hasHoods = true;
+                const hoodsCount = document.getElementById('hoodsCount');
+                p.hoodsCount = hoodsCount ? hoodsCount.value : 0;
+                p.hoods = hoodsData.filter(h => h.w || h.l || h.h);
+            } else {
+                p.hasHoods = false;
+            }
         }
         return p;
     }
 
-    // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ (АККОРДЕОН)
+    // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ
     function renderAccessories() {
         const accTitle = document.getElementById('accTitle');
-        if(accTitle) accTitle.innerHTML = `🔧 ${currentEquipment}`;
+        if (accTitle) accTitle.innerHTML = `🔧 ${currentEquipment}`;
         const container = document.getElementById('accessoriesList');
-        if(!container) return;
+        if (!container) return;
         container.innerHTML = '';
         categories.forEach(cat => {
             const div = document.createElement('div');
             div.className = 'accessory-cat';
-            div.innerHTML = `<div class="accessory-header"><span>${cat.name}</span><span class="arrow">▶</span></div><div class="accessory-items">${cat.items.map(i => `<label><input type="checkbox" value="${i}"> ${i}</label>`).join('')}</div>`;
+            div.innerHTML = `
+                <div class="accessory-header">
+                    <span>${cat.name}</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="accessory-items">
+                    ${cat.items.map(item => `<label><input type="checkbox" value="${item}"> ${item}</label>`).join('')}
+                </div>
+            `;
             const header = div.querySelector('.accessory-header');
-            header.onclick = () => div.classList.toggle('open');
+            header.addEventListener('click', () => div.classList.toggle('open'));
             container.appendChild(div);
         });
     }
 
-    // ПОКАЗ КОНТАКТОВ
+    // ПОКАЗ СТРАНИЦЫ С КОНТАКТАМИ
     function showContacts() {
         const contactTitle = document.getElementById('contactTitle');
-        if(contactTitle) contactTitle.innerHTML = `🔧 ${currentEquipment}`;
+        if (contactTitle) contactTitle.innerHTML = `🔧 ${currentEquipment}`;
         const accDiv = document.getElementById('selectedAccList');
-        if(accDiv) {
-            if(selectedAccessories.length) {
+        if (accDiv) {
+            if (selectedAccessories.length) {
                 accDiv.style.display = 'block';
                 accDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
-            } else accDiv.style.display = 'none';
+            } else {
+                accDiv.style.display = 'none';
+            }
         }
     }
 
-    // ФОРМИРОВАНИЕ ЗАЯВКИ
+    // ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ ДЛЯ КОПИРОВАНИЯ
     function getOrderText() {
-        const name = document.getElementById('userName')?.value.trim() || 'не указано';
-        const email = document.getElementById('userEmail')?.value.trim() || 'не указан';
-        const city = document.getElementById('userCity')?.value.trim() || 'не указан';
-        const phone = document.getElementById('userPhone')?.value.trim() || 'не указан';
-        const comment = document.getElementById('userComment')?.value.trim() || 'нет';
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const userCity = document.getElementById('userCity');
+        const userPhone = document.getElementById('userPhone');
+        const userComment = document.getElementById('userComment');
+        
+        const name = userName ? userName.value.trim() : 'не указано';
+        const email = userEmail ? userEmail.value.trim() : 'не указан';
+        const city = userCity ? userCity.value.trim() : 'не указан';
+        const phone = userPhone ? userPhone.value.trim() : 'не указан';
+        const comment = userComment ? userComment.value.trim() : 'нет';
+        
         let paramsText = '';
-        if(currentParams.capacity) paramsText = `Рабочая точка: ${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
-        else paramsText = `По помещению: ${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, расстояние ${currentParams.distance||'?'} м`;
-        let hoodsText = '';
-        if(currentParams.hasHoods && currentParams.hoods?.length) {
-            hoodsText = `\n🍽️ Зонты (${currentParams.hoodsCount||0} шт.):`;
-            currentParams.hoods.forEach((h,i) => hoodsText += `\n   Зонт ${i+1}: ${h.w||'?'}×${h.l||'?'}×${h.h||'?'} мм`);
+        if (currentParams.capacity) {
+            paramsText = `Рабочая точка: ${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
+        } else {
+            paramsText = `По помещению: ${currentParams.roomW || '?'}×${currentParams.roomL || '?'}×${currentParams.roomH || '?'} м, расстояние ${currentParams.distance || '?'} м`;
         }
+        
+        let hoodsText = '';
+        if (currentParams.hasHoods && currentParams.hoods && currentParams.hoods.length) {
+            hoodsText = `\n🍽️ Зонты (${currentParams.hoodsCount || 0} шт.):`;
+            currentParams.hoods.forEach((h, i) => {
+                hoodsText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
+            });
+        }
+        
         return `🔔 НОВАЯ ЗАЯВКА НА ВЕНТИЛЯЦИЮ
 
 📌 Тип: ${currentEquipment}
@@ -696,27 +755,204 @@ ${paramsText}${hoodsText}
   • Комментарий: ${comment}`;
     }
 
+    // ФОРМИРОВАНИЕ ССЫЛКИ ДЛЯ ПОЧТЫ
     function getMailLink() {
-        const name = document.getElementById('userName')?.value.trim() || '';
-        const email = document.getElementById('userEmail')?.value.trim() || '';
-        const city = document.getElementById('userCity')?.value.trim() || '';
-        const phone = document.getElementById('userPhone')?.value.trim() || '';
-        const comment = document.getElementById('userComment')?.value.trim() || '';
+        const userName = document.getElementById('userName');
+        const userEmail = document.getElementById('userEmail');
+        const userCity = document.getElementById('userCity');
+        const userPhone = document.getElementById('userPhone');
+        const userComment = document.getElementById('userComment');
+        
+        const name = userName ? userName.value.trim() : '';
+        const email = userEmail ? userEmail.value.trim() : '';
+        const city = userCity ? userCity.value.trim() : '';
+        const phone = userPhone ? userPhone.value.trim() : '';
+        const comment = userComment ? userComment.value.trim() : '';
+        
         let paramsText = '';
-        if(currentParams.capacity) paramsText = `${currentParams.capacity} м³/ч, ${currentParams.pressure||'?'} Па`;
-        else paramsText = `${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, ${currentParams.distance||'?'} м`;
+        if (currentParams.capacity) {
+            paramsText = `${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
+        } else {
+            paramsText = `${currentParams.roomW || '?'}×${currentParams.roomL || '?'}×${currentParams.roomH || '?'} м, ${currentParams.distance || '?'} м`;
+        }
+        
         let hoodsText = '';
-        if(currentParams.hasHoods) hoodsText = `\nЗонты: ${currentParams.hoodsCount||0} шт.`;
+        if (currentParams.hasHoods) {
+            hoodsText = `\nЗонты: ${currentParams.hoodsCount || 0} шт.`;
+        }
+        
         const body = `Новая заявка с сайта\n\nТип: ${currentEquipment}\nПараметры: ${paramsText}${hoodsText}\nПринадлежности: ${selectedAccessories.join(', ') || 'нет'}\n\nКонтакты:\nИмя: ${name}\nEmail: ${email}\nГород: ${city}\nТелефон: ${phone}\nКомментарий: ${comment}`;
         return `mailto:mirovik@mir-ovik.ru?subject=${encodeURIComponent(`Заявка: ${currentEquipment}`)}&body=${encodeURIComponent(body)}`;
     }
 
-    function showMessage(text, isError=false) {
+    function showMessage(text, isError = false) {
         const msg = document.getElementById('msg');
-        if(msg) {
+        if (msg) {
             msg.innerHTML = text;
             msg.classList.add('show');
             msg.style.background = isError ? '#fee2e2' : '#d1fae5';
             msg.style.color = isError ? '#991b1b' : '#065f46';
             setTimeout(() => msg.classList.remove('show'), 3500);
-       
+        }
+    }
+
+    // ИНИЦИАЛИЗАЦИЯ ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ (РАБОЧАЯ ТОЧКА / ПОМЕЩЕНИЕ)
+    function initModeSwitch() {
+        const workBtn = document.querySelector('[data-mode="work"]');
+        const roomBtn = document.querySelector('[data-mode="room"]');
+        const workPanel = document.getElementById('workPanel');
+        const roomPanel = document.getElementById('roomPanel');
+        
+        if (workBtn && roomBtn && workPanel && roomPanel) {
+            const setMode = (mode) => {
+                if (mode === 'work') {
+                    workBtn.classList.add('active');
+                    roomBtn.classList.remove('active');
+                    workPanel.classList.add('show');
+                    roomPanel.classList.remove('show');
+                } else {
+                    roomBtn.classList.add('active');
+                    workBtn.classList.remove('active');
+                    roomPanel.classList.add('show');
+                    workPanel.classList.remove('show');
+                }
+            };
+            workBtn.onclick = () => setMode('work');
+            roomBtn.onclick = () => setMode('room');
+        }
+    }
+
+    // ==================== НАСТРОЙКА ОБРАБОТЧИКОВ ====================
+    
+    // 1. КАРТОЧКИ НА ПЕРВОЙ СТРАНИЦЕ
+    document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => {
+            currentEquipment = card.getAttribute('data-equipment');
+            if (currentEquipment === "Принадлежности к вентиляции") {
+                // Сразу переходим к выбору принадлежностей
+                currentParams = {};
+                selectedAccessories = [];
+                renderAccessories();
+                page1.classList.remove('active');
+                pageAcc.classList.add('active');
+            } else {
+                // Переходим на страницу параметров
+                renderPage2();
+                page1.classList.remove('active');
+                page2.classList.add('active');
+                initModeSwitch(); // Активируем переключатель режимов
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    // 2. КНОПКИ НА СТРАНИЦЕ ПАРАМЕТРОВ
+    const withAccessoriesBtn = document.getElementById('withAccessories');
+    const withoutAccessoriesBtn = document.getElementById('withoutAccessories');
+    const backToMainBtn = document.getElementById('backToMain');
+
+    if (withAccessoriesBtn) {
+        withAccessoriesBtn.addEventListener('click', () => {
+            currentParams = collectParams();
+            renderAccessories();
+            page2.classList.remove('active');
+            pageAcc.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    if (withoutAccessoriesBtn) {
+        withoutAccessoriesBtn.addEventListener('click', () => {
+            currentParams = collectParams();
+            selectedAccessories = [];
+            showContacts();
+            page2.classList.remove('active');
+            pageContacts.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    if (backToMainBtn) {
+        backToMainBtn.addEventListener('click', () => {
+            page2.classList.remove('active');
+            page1.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // 3. КНОПКИ НА СТРАНИЦЕ ПРИНАДЛЕЖНОСТЕЙ
+    const submitAccessoriesBtn = document.getElementById('submitAccessories');
+    const backToParamsBtn = document.getElementById('backToParams');
+
+    if (submitAccessoriesBtn) {
+        submitAccessoriesBtn.addEventListener('click', () => {
+            selectedAccessories = [];
+            const allCheckboxes = document.querySelectorAll('#accessoriesList input:checked');
+            allCheckboxes.forEach(cb => selectedAccessories.push(cb.value));
+            showContacts();
+            pageAcc.classList.remove('active');
+            pageContacts.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    if (backToParamsBtn) {
+        backToParamsBtn.addEventListener('click', () => {
+            pageAcc.classList.remove('active');
+            page2.classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
+    // 4. КНОПКИ НА СТРАНИЦЕ КОНТАКТОВ
+    const copyBtn = document.getElementById('copyBtn');
+    const emailBtn = document.getElementById('emailBtn');
+    const backFromContactsBtn = document.getElementById('backFromContacts');
+
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            const name = document.getElementById('userName');
+            const email = document.getElementById('userEmail');
+            const city = document.getElementById('userCity');
+            if (!name.value.trim() || !email.value.trim() || !city.value.trim()) {
+                showMessage('❌ Заполните обязательные поля: Имя, Email, Город', true);
+                return;
+            }
+            navigator.clipboard.writeText(getOrderText()).then(() => {
+                showMessage('✅ Заявка скопирована! Отправьте её в Telegram или по почте.');
+            }).catch(() => {
+                showMessage('❌ Не удалось скопировать. Попробуйте вручную.', true);
+            });
+        });
+    }
+
+    if (emailBtn) {
+        emailBtn.addEventListener('click', () => {
+            const name = document.getElementById('userName');
+            const email = document.getElementById('userEmail');
+            const city = document.getElementById('userCity');
+            if (!name.value.trim() || !email.value.trim() || !city.value.trim()) {
+                showMessage('❌ Заполните обязательные поля: Имя, Email, Город', true);
+                return;
+            }
+            window.location.href = getMailLink();
+            showMessage('✉️ Открывается почтовый клиент. Отправьте письмо менеджеру.');
+        });
+    }
+
+    if (backFromContactsBtn) {
+        backFromContactsBtn.addEventListener('click', () => {
+            if (selectedAccessories.length > 0) {
+                pageContacts.classList.remove('active');
+                pageAcc.classList.add('active');
+            } else {
+                pageContacts.classList.remove('active');
+                page2.classList.add('active');
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+    // ==================== КОНЕЦ JAVASCRIPT КОДА ====================
+</script>
+</body>
+</html>
