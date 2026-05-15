@@ -386,6 +386,47 @@
             border: none;
             border-top: 1px solid #e2e8f0;
         }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 20px;
+            margin-bottom: 20px;
+        }
+        .checkbox-label input {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        .hoods-section {
+            background: #f8fafc;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            display: none;
+        }
+        .hoods-section.visible {
+            display: block;
+        }
+        .hood-item {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 16px;
+            margin-top: 16px;
+        }
+        .hood-item:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        .hood-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #f97316;
+        }
     </style>
 </head>
 <body>
@@ -484,12 +525,191 @@
     let currentEquipment = "";
     let currentParams = {};
     let selectedAccessories = [];
+    let hoodsData = []; // данные о зонтах
     
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
     const pageAccessories = document.getElementById('pageAccessories');
     const pageContacts = document.getElementById('pageContacts');
 
+    // ---------- ФУНКЦИЯ ДЛЯ ГЕНЕРАЦИИ ПОЛЕЙ ЗОНТОВ ----------
+    function generateHoodsFields(count) {
+        const container = document.getElementById('hoodsFieldsContainer');
+        if (!container) return;
+        
+        container.innerHTML = '';
+        hoodsData = [];
+        
+        for (let i = 0; i < count; i++) {
+            hoodsData.push({ width: '', length: '', height: '' });
+            const hoodDiv = document.createElement('div');
+            hoodDiv.className = 'hood-item';
+            hoodDiv.innerHTML = `
+                <div class="hood-title">📐 Зонт ${i + 1}</div>
+                <div class="grid-3">
+                    <div class="input-field">
+                        <label>Ширина</label>
+                        <div class="input-wrapper"><input type="number" step="any" class="hood-width-${i}" placeholder="мм"><span class="unit-badge">мм</span></div>
+                    </div>
+                    <div class="input-field">
+                        <label>Длина</label>
+                        <div class="input-wrapper"><input type="number" step="any" class="hood-length-${i}" placeholder="мм"><span class="unit-badge">мм</span></div>
+                    </div>
+                    <div class="input-field">
+                        <label>Высота</label>
+                        <div class="input-wrapper"><input type="number" step="any" class="hood-height-${i}" placeholder="мм"><span class="unit-badge">мм</span></div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(hoodDiv);
+        }
+        
+        // Добавляем обработчики для сохранения данных
+        for (let i = 0; i < count; i++) {
+            const widthInput = document.querySelector(`.hood-width-${i}`);
+            const lengthInput = document.querySelector(`.hood-length-${i}`);
+            const heightInput = document.querySelector(`.hood-height-${i}`);
+            if (widthInput) widthInput.addEventListener('input', (e) => { hoodsData[i].width = e.target.value; });
+            if (lengthInput) lengthInput.addEventListener('input', (e) => { hoodsData[i].length = e.target.value; });
+            if (heightInput) heightInput.addEventListener('input', (e) => { hoodsData[i].height = e.target.value; });
+        }
+    }
+    
+    // ---------- ФУНКЦИЯ ДЛЯ ОТРИСОВКИ СТРАНИЦЫ 2 С УЧЁТОМ ТИПА ----------
+    function renderStep2() {
+        const isKitchen = (currentEquipment === "Вентиляция для Кухни");
+        
+        const container = document.getElementById('dynamicContent');
+        container.innerHTML = `
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="workpoint">🎯 Рабочая точка</button>
+                <button class="mode-btn" data-mode="room">📐 По помещению</button>
+            </div>
+            <div id="workpoint-panel" class="form-panel active-panel">
+                <div class="input-field"><label>Производительность</label><div class="input-wrapper"><input type="number" id="capacity" placeholder="1200"><span class="unit-badge">м³/ч</span></div></div>
+                <div class="input-field"><label>Давление</label><div class="input-wrapper"><input type="number" id="pressure" placeholder="250"><span class="unit-badge">Па</span></div></div>
+            </div>
+            <div id="room-panel" class="form-panel">
+                <div class="grid-3">
+                    <div class="input-field"><label>Ширина помещения</label><div class="input-wrapper"><input type="number" id="width" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Длина помещения</label><div class="input-wrapper"><input type="number" id="length" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Высота помещения</label><div class="input-wrapper"><input type="number" id="height" placeholder="м"><span class="unit-badge">м</span></div></div>
+                </div>
+                <div class="input-field"><label>Расстояние от вентилятора до помещения</label><div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div></div>
+            </div>
+            ${isKitchen ? `
+                <div style="margin-top: 24px;">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hasHoodsCheckbox">
+                        <span>🍽️ Есть вытяжные зонты</span>
+                    </label>
+                    <div id="hoodsSection" class="hoods-section">
+                        <div class="input-field">
+                            <label>Количество зонтов</label>
+                            <div class="input-wrapper"><input type="number" id="hoodsCount" min="1" max="10" placeholder="1"><span class="unit-badge">шт</span></div>
+                        </div>
+                        <div id="hoodsFieldsContainer"></div>
+                    </div>
+                </div>
+            ` : ''}
+            <div style="margin-top: 24px;">
+                <div class="tooltip-wrapper" style="margin-bottom: 12px;">
+                    <div class="btn-secondary" style="text-align:center; background:#f1f5f9;">📦 Категории комплектующих (наведи)</div>
+                    <div class="tooltip-list">
+                        <ul style="margin:0; padding-left:18px;">
+                            <li>Воздуховоды и элементы монтажа</li><li>Устройства распределения воздуха</li><li>Очистка и подготовка воздуха</li>
+                            <li>Нагревательные элементы</li><li>Шумо- и виброзащита</li><li>Контрольно-измерительные устройства</li><li>Вспомогательные элементы</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="double-buttons">
+                    <button id="withAccessoriesBtn" class="btn-next">➕ Добавить комплектующие</button>
+                    <button id="withoutAccessoriesBtn" class="btn-secondary">➡️ Только вентилятор</button>
+                </div>
+            </div>
+        `;
+        
+        // Настройка переключения режимов
+        const modeBtns = document.querySelectorAll('.mode-btn');
+        const workPanel = document.getElementById('workpoint-panel');
+        const roomPanelEl = document.getElementById('room-panel');
+        function setMode(mode) {
+            if (mode === 'workpoint') { workPanel.classList.add('active-panel'); roomPanelEl.classList.remove('active-panel'); }
+            else { workPanel.classList.remove('active-panel'); roomPanelEl.classList.add('active-panel'); }
+            modeBtns.forEach(btn => { const btnMode = btn.getAttribute('data-mode'); if (btnMode === mode) btn.classList.add('active'); else btn.classList.remove('active'); });
+        }
+        modeBtns.forEach(btn => btn.addEventListener('click', (e) => setMode(btn.getAttribute('data-mode'))));
+        
+        // Если кухня — настройка зонтов
+        if (isKitchen) {
+            const hasHoodsCheckbox = document.getElementById('hasHoodsCheckbox');
+            const hoodsSection = document.getElementById('hoodsSection');
+            const hoodsCountInput = document.getElementById('hoodsCount');
+            
+            hasHoodsCheckbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    hoodsSection.classList.add('visible');
+                } else {
+                    hoodsSection.classList.remove('visible');
+                    document.getElementById('hoodsFieldsContainer').innerHTML = '';
+                    hoodsData = [];
+                }
+            });
+            
+            hoodsCountInput.addEventListener('input', (e) => {
+                let count = parseInt(e.target.value);
+                if (isNaN(count) || count < 1) count = 1;
+                if (count > 10) count = 10;
+                generateHoodsFields(count);
+            });
+        }
+        
+        function collectParams() {
+            const isWorkpoint = workPanel.classList.contains('active-panel');
+            let params = {};
+            if (isWorkpoint) {
+                params.capacity = document.getElementById('capacity')?.value || '';
+                params.pressure = document.getElementById('pressure')?.value || '';
+            } else {
+                params.roomWidth = document.getElementById('width')?.value || '';
+                params.roomLength = document.getElementById('length')?.value || '';
+                params.roomHeight = document.getElementById('height')?.value || '';
+                params.distance = document.getElementById('distance')?.value || '';
+            }
+            
+            // Добавляем данные о зонтах если есть
+            if (isKitchen) {
+                const hasHoods = document.getElementById('hasHoodsCheckbox')?.checked || false;
+                if (hasHoods) {
+                    params.hasHoods = true;
+                    params.hoodsCount = document.getElementById('hoodsCount')?.value || 0;
+                    params.hoods = hoodsData.filter(h => h.width || h.length || h.height);
+                } else {
+                    params.hasHoods = false;
+                }
+            }
+            
+            return params;
+        }
+        
+        document.getElementById('withAccessoriesBtn').addEventListener('click', () => {
+            currentParams = collectParams();
+            renderAccessoriesPage();
+            page2.classList.remove('active-page');
+            pageAccessories.classList.add('active-page');
+            window.scrollTo(0,0);
+        });
+        
+        document.getElementById('withoutAccessoriesBtn').addEventListener('click', () => {
+            currentParams = collectParams();
+            selectedAccessories = [];
+            showContactsPage();
+            page2.classList.remove('active-page');
+            pageContacts.classList.add('active-page');
+            window.scrollTo(0,0);
+        });
+    }
+    
     // ---------- ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ ----------
     function getFormattedOrderText() {
         const name = document.getElementById('contactName')?.value.trim() || 'не указано';
@@ -501,10 +721,21 @@
         let paramsText = '';
         if (currentParams.capacity || currentParams.pressure) {
             paramsText = `Рабочая точка:\n  • Производительность: ${currentParams.capacity || 'не указано'} м³/ч\n  • Давление: ${currentParams.pressure || 'не указано'} Па`;
-        } else if (currentParams.width || currentParams.length || currentParams.height) {
-            paramsText = `По помещению:\n  • Ширина: ${currentParams.width || 'не указано'} м\n  • Длина: ${currentParams.length || 'не указано'} м\n  • Высота: ${currentParams.height || 'не указано'} м\n  • Расстояние: ${currentParams.distance || 'не указано'} м`;
+        } else if (currentParams.roomWidth || currentParams.roomLength || currentParams.roomHeight) {
+            paramsText = `По помещению:\n  • Ширина: ${currentParams.roomWidth || 'не указано'} м\n  • Длина: ${currentParams.roomLength || 'не указано'} м\n  • Высота: ${currentParams.roomHeight || 'не указано'} м\n  • Расстояние от вентилятора: ${currentParams.distance || 'не указано'} м`;
         } else {
             paramsText = 'не указаны';
+        }
+        
+        // Добавляем информацию о зонтах если есть
+        let hoodsText = '';
+        if (currentParams.hasHoods) {
+            hoodsText = `\n\n🍽️ Вытяжные зонты:\n  • Количество: ${currentParams.hoodsCount || 0} шт.`;
+            if (currentParams.hoods && currentParams.hoods.length > 0) {
+                currentParams.hoods.forEach((hood, idx) => {
+                    hoodsText += `\n  • Зонт ${idx + 1}: ${hood.width || '?'}×${hood.length || '?'}×${hood.height || '?'} мм`;
+                });
+            }
         }
         
         return `🔔 НОВАЯ ЗАЯВКА НА ВЕНТИЛЯЦИЮ
@@ -512,7 +743,7 @@
 📌 Тип оборудования: ${currentEquipment}
 
 📊 Параметры:
-${paramsText}
+${paramsText}${hoodsText}
 
 📦 Принадлежности: ${selectedAccessories.length > 0 ? selectedAccessories.join(', ') : 'не выбраны'}
 
@@ -534,16 +765,26 @@ ${paramsText}
         let paramsText = '';
         if (currentParams.capacity || currentParams.pressure) {
             paramsText = `Рабочая точка: ${currentParams.capacity || '?'} м³/ч, ${currentParams.pressure || '?'} Па`;
-        } else if (currentParams.width || currentParams.length || currentParams.height) {
-            paramsText = `По помещению: ${currentParams.width || '?'}x${currentParams.length || '?'}x${currentParams.height || '?'} м, расстояние ${currentParams.distance || '?'} м`;
+        } else if (currentParams.roomWidth || currentParams.roomLength || currentParams.roomHeight) {
+            paramsText = `По помещению: ${currentParams.roomWidth || '?'}×${currentParams.roomLength || '?'}×${currentParams.roomHeight || '?'} м, расстояние ${currentParams.distance || '?'} м`;
         } else {
             paramsText = 'не указаны';
+        }
+        
+        let hoodsText = '';
+        if (currentParams.hasHoods) {
+            hoodsText = `\nЗонты: ${currentParams.hoodsCount || 0} шт.`;
+            if (currentParams.hoods && currentParams.hoods.length > 0) {
+                currentParams.hoods.forEach((hood, idx) => {
+                    hoodsText += `\nЗонт ${idx + 1}: ${hood.width || '?'}×${hood.length || '?'}×${hood.height || '?'} мм`;
+                });
+            }
         }
         
         const body = `Новая заявка с сайта
 
 Тип оборудования: ${currentEquipment}
-Параметры: ${paramsText}
+Параметры: ${paramsText}${hoodsText}
 Принадлежности: ${selectedAccessories.join(', ') || 'нет'}
 
 Контактные данные:
@@ -584,208 +825,3 @@ Email: ${email}
         const name = document.getElementById('contactName')?.value.trim();
         const email = document.getElementById('contactEmail')?.value.trim();
         const city = document.getElementById('contactCity')?.value.trim();
-        if (!name || !email || !city) {
-            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
-            return false;
-        }
-        return true;
-    }
-    
-    // ---------- КНОПКИ НА СТРАНИЦЕ 3 ----------
-    document.getElementById('copyOrderBtn').addEventListener('click', () => {
-        if (!validateRequired()) return;
-        const text = getFormattedOrderText();
-        navigator.clipboard.writeText(text).then(() => {
-            showMessage('✅ Заявка скопирована! Отправьте её в Telegram или по почте.');
-        }).catch(() => {
-            showMessage('❌ Не удалось скопировать. Скопируйте текст вручную.', false);
-        });
-    });
-    
-    document.getElementById('emailOrderBtn').addEventListener('click', () => {
-        if (!validateRequired()) return;
-        const mailtoLink = getMailToLink();
-        window.location.href = mailtoLink;
-        showMessage('✉️ Открывается почтовый клиент. Отправьте письмо менеджеру.');
-    });
-    
-    // ---------- ОТРИСОВКА СТРАНИЦЫ 2 ----------
-    function renderStep2() {
-        const container = document.getElementById('dynamicContent');
-        container.innerHTML = `
-            <div class="mode-switch">
-                <button class="mode-btn active" data-mode="workpoint">🎯 Рабочая точка</button>
-                <button class="mode-btn" data-mode="room">📐 По помещению</button>
-            </div>
-            <div id="workpoint-panel" class="form-panel active-panel">
-                <div class="input-field"><label>Производительность</label><div class="input-wrapper"><input type="number" id="capacity" placeholder="1200"><span class="unit-badge">м³/ч</span></div></div>
-                <div class="input-field"><label>Давление</label><div class="input-wrapper"><input type="number" id="pressure" placeholder="250"><span class="unit-badge">Па</span></div></div>
-            </div>
-            <div id="room-panel" class="form-panel">
-                <div class="grid-3">
-                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="width" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="length" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="height" placeholder="м"><span class="unit-badge">м</span></div></div>
-                </div>
-                <div class="input-field"><label>Расстояние до помещения</label><div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div></div>
-            </div>
-            <div style="margin-top: 24px;">
-                <div class="tooltip-wrapper" style="margin-bottom: 12px;">
-                    <div class="btn-secondary" style="text-align:center; background:#f1f5f9;">📦 Категории комплектующих (наведи)</div>
-                    <div class="tooltip-list">
-                        <ul style="margin:0; padding-left:18px;">
-                            <li>Воздуховоды и элементы монтажа</li><li>Устройства распределения воздуха</li><li>Очистка и подготовка воздуха</li>
-                            <li>Нагревательные элементы</li><li>Шумо- и виброзащита</li><li>Контрольно-измерительные устройства</li><li>Вспомогательные элементы</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="double-buttons">
-                    <button id="withAccessoriesBtn" class="btn-next">➕ Добавить комплектующие</button>
-                    <button id="withoutAccessoriesBtn" class="btn-secondary">➡️ Только вентилятор</button>
-                </div>
-            </div>
-        `;
-        
-        const modeBtns = document.querySelectorAll('.mode-btn');
-        const workPanel = document.getElementById('workpoint-panel');
-        const roomPanelEl = document.getElementById('room-panel');
-        function setMode(mode) {
-            if (mode === 'workpoint') { workPanel.classList.add('active-panel'); roomPanelEl.classList.remove('active-panel'); }
-            else { workPanel.classList.remove('active-panel'); roomPanelEl.classList.add('active-panel'); }
-            modeBtns.forEach(btn => { const btnMode = btn.getAttribute('data-mode'); if (btnMode === mode) btn.classList.add('active'); else btn.classList.remove('active'); });
-        }
-        modeBtns.forEach(btn => btn.addEventListener('click', (e) => setMode(btn.getAttribute('data-mode'))));
-        
-        function collectParams() {
-            const isWorkpoint = workPanel.classList.contains('active-panel');
-            let params = {};
-            if (isWorkpoint) {
-                params.capacity = document.getElementById('capacity')?.value || '';
-                params.pressure = document.getElementById('pressure')?.value || '';
-            } else {
-                params.width = document.getElementById('width')?.value || '';
-                params.length = document.getElementById('length')?.value || '';
-                params.height = document.getElementById('height')?.value || '';
-                params.distance = document.getElementById('distance')?.value || '';
-            }
-            return params;
-        }
-        
-        document.getElementById('withAccessoriesBtn').addEventListener('click', () => {
-            currentParams = collectParams();
-            renderAccessoriesPage();
-            page2.classList.remove('active-page');
-            pageAccessories.classList.add('active-page');
-            window.scrollTo(0,0);
-        });
-        
-        document.getElementById('withoutAccessoriesBtn').addEventListener('click', () => {
-            currentParams = collectParams();
-            selectedAccessories = [];
-            showContactsPage();
-            page2.classList.remove('active-page');
-            pageContacts.classList.add('active-page');
-            window.scrollTo(0,0);
-        });
-    }
-    
-    // ---------- КАТЕГОРИИ ПРИНАДЛЕЖНОСТЕЙ ----------
-    const categories = [
-        { name: "Воздуховоды и элементы их монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны и подвесы", "уплотнители и герметики"] },
-        { name: "Устройства для распределения и регулировки воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны и заслонки"] },
-        { name: "Устройства для очистки и подготовки воздуха", items: ["фильтры", "рекуператоры", "увлажнители/осушители", "ионизаторы/озонаторы"] },
-        { name: "Нагревательные и охлаждающие элементы", items: ["калориферы (нагреватели)", "охладители"] },
-        { name: "Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
-        { name: "Контрольно‑измерительные и управляющие устройства", items: ["датчики", "регуляторы и контроллеры", "приводы клапанов", "щиты управления"] },
-        { name: "Вспомогательные и защитные элементы", items: ["дефлекторы", "вытяжные зонты", "люки и дверцы", "смесительные узлы", "дренажные системы"] }
-    ];
-    
-    function renderAccessoriesPage() {
-        document.getElementById('selectedEquipmentAccessories').innerHTML = `🔧 ${currentEquipment}`;
-        const container = document.getElementById('accessoriesList');
-        container.innerHTML = '';
-        categories.forEach((cat) => {
-            const div = document.createElement('div');
-            div.className = 'accessory-cat';
-            div.innerHTML = `
-                <div class="accessory-header">
-                    <span>📦 ${cat.name}</span>
-                    <span class="arrow">▶</span>
-                </div>
-                <div class="accessory-items">
-                    ${cat.items.map(item => `<label><input type="checkbox" value="${item}"> ${item}</label>`).join('')}
-                </div>
-            `;
-            const header = div.querySelector('.accessory-header');
-            header.addEventListener('click', () => { div.classList.toggle('open'); });
-            container.appendChild(div);
-        });
-    }
-    
-    document.getElementById('submitAccessoriesToContacts').addEventListener('click', () => {
-        selectedAccessories = [];
-        document.querySelectorAll('.accessory-items input:checked').forEach(cb => {
-            selectedAccessories.push(cb.value);
-        });
-        showContactsPage();
-        pageAccessories.classList.remove('active-page');
-        pageContacts.classList.add('active-page');
-        window.scrollTo(0,0);
-    });
-    
-    document.getElementById('backToParamsFromAccessories').addEventListener('click', () => {
-        pageAccessories.classList.remove('active-page');
-        page2.classList.add('active-page');
-        window.scrollTo(0,0);
-    });
-    
-    function showContactsPage() {
-        document.getElementById('selectedEquipmentContacts').innerHTML = `🔧 ${currentEquipment}`;
-        const accessoriesDiv = document.getElementById('selectedAccessoriesDisplay');
-        if (selectedAccessories.length > 0) {
-            accessoriesDiv.style.display = 'block';
-            accessoriesDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
-        } else {
-            accessoriesDiv.style.display = 'none';
-        }
-    }
-    
-    document.getElementById('backToPrevFromContacts').addEventListener('click', () => {
-        if (selectedAccessories.length > 0) {
-            pageContacts.classList.remove('active-page');
-            pageAccessories.classList.add('active-page');
-        } else {
-            pageContacts.classList.remove('active-page');
-            page2.classList.add('active-page');
-        }
-        window.scrollTo(0,0);
-    });
-    
-    // ---------- ПЕРЕХОДЫ С ГЛАВНОЙ ----------
-    document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentEquipment = card.getAttribute('data-equipment');
-            document.getElementById('selectedEquipmentDisplay').innerHTML = `🔧 ${currentEquipment}`;
-            if (currentEquipment === "Принадлежности к вентиляции") {
-                selectedAccessories = [];
-                currentParams = {};
-                renderAccessoriesPage();
-                page1.classList.remove('active-page');
-                pageAccessories.classList.add('active-page');
-            } else {
-                renderStep2();
-                page1.classList.remove('active-page');
-                page2.classList.add('active-page');
-            }
-            window.scrollTo(0,0);
-        });
-    });
-    
-    document.getElementById('backToTypeBtn').addEventListener('click', () => {
-        page2.classList.remove('active-page');
-        page1.classList.add('active-page');
-    });
-</script>
-</body>
-</html>
