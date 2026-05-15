@@ -511,7 +511,7 @@
             <button id="copyOrderBtn" class="btn-next">📋 Скопировать заявку</button>
             <a id="telegramLinkBtn" href="https://t.me/MIR_OVIK" target="_blank" class="telegram-link">📨 Отправить в Telegram →</a>
             
-            <div class="button-group" style="display: flex; gap: 12px; margin-top: 16px;">
+            <div style="display: flex; gap: 12px; margin-top: 16px;">
                 <button id="emailOrderBtn" class="btn-secondary" style="flex:1">✉️ Отправить на почту</button>
             </div>
             
@@ -525,7 +525,7 @@
     let currentEquipment = "";
     let currentParams = {};
     let selectedAccessories = [];
-    let hoodsData = []; // данные о зонтах
+    let hoodsData = [];
     
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
@@ -564,7 +564,6 @@
             container.appendChild(hoodDiv);
         }
         
-        // Добавляем обработчики для сохранения данных
         for (let i = 0; i < count; i++) {
             const widthInput = document.querySelector(`.hood-width-${i}`);
             const lengthInput = document.querySelector(`.hood-length-${i}`);
@@ -575,7 +574,7 @@
         }
     }
     
-    // ---------- ФУНКЦИЯ ДЛЯ ОТРИСОВКИ СТРАНИЦЫ 2 С УЧЁТОМ ТИПА ----------
+    // ---------- ОТРИСОВКА СТРАНИЦЫ 2 ----------
     function renderStep2() {
         const isKitchen = (currentEquipment === "Вентиляция для Кухни");
         
@@ -629,7 +628,7 @@
             </div>
         `;
         
-        // Настройка переключения режимов
+        // Переключение режимов
         const modeBtns = document.querySelectorAll('.mode-btn');
         const workPanel = document.getElementById('workpoint-panel');
         const roomPanelEl = document.getElementById('room-panel');
@@ -640,28 +639,33 @@
         }
         modeBtns.forEach(btn => btn.addEventListener('click', (e) => setMode(btn.getAttribute('data-mode'))));
         
-        // Если кухня — настройка зонтов
+        // Логика зонтов для кухни
         if (isKitchen) {
             const hasHoodsCheckbox = document.getElementById('hasHoodsCheckbox');
             const hoodsSection = document.getElementById('hoodsSection');
             const hoodsCountInput = document.getElementById('hoodsCount');
             
-            hasHoodsCheckbox.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    hoodsSection.classList.add('visible');
-                } else {
-                    hoodsSection.classList.remove('visible');
-                    document.getElementById('hoodsFieldsContainer').innerHTML = '';
-                    hoodsData = [];
-                }
-            });
+            if (hasHoodsCheckbox) {
+                hasHoodsCheckbox.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        hoodsSection.classList.add('visible');
+                    } else {
+                        hoodsSection.classList.remove('visible');
+                        const container = document.getElementById('hoodsFieldsContainer');
+                        if (container) container.innerHTML = '';
+                        hoodsData = [];
+                    }
+                });
+            }
             
-            hoodsCountInput.addEventListener('input', (e) => {
-                let count = parseInt(e.target.value);
-                if (isNaN(count) || count < 1) count = 1;
-                if (count > 10) count = 10;
-                generateHoodsFields(count);
-            });
+            if (hoodsCountInput) {
+                hoodsCountInput.addEventListener('input', (e) => {
+                    let count = parseInt(e.target.value);
+                    if (isNaN(count) || count < 1) count = 1;
+                    if (count > 10) count = 10;
+                    generateHoodsFields(count);
+                });
+            }
         }
         
         function collectParams() {
@@ -677,7 +681,6 @@
                 params.distance = document.getElementById('distance')?.value || '';
             }
             
-            // Добавляем данные о зонтах если есть
             if (isKitchen) {
                 const hasHoods = document.getElementById('hasHoodsCheckbox')?.checked || false;
                 if (hasHoods) {
@@ -692,22 +695,101 @@
             return params;
         }
         
-        document.getElementById('withAccessoriesBtn').addEventListener('click', () => {
-            currentParams = collectParams();
-            renderAccessoriesPage();
-            page2.classList.remove('active-page');
-            pageAccessories.classList.add('active-page');
-            window.scrollTo(0,0);
-        });
+        const withBtn = document.getElementById('withAccessoriesBtn');
+        const withoutBtn = document.getElementById('withoutAccessoriesBtn');
         
-        document.getElementById('withoutAccessoriesBtn').addEventListener('click', () => {
-            currentParams = collectParams();
+        if (withBtn) {
+            withBtn.addEventListener('click', () => {
+                currentParams = collectParams();
+                renderAccessoriesPage();
+                page2.classList.remove('active-page');
+                pageAccessories.classList.add('active-page');
+                window.scrollTo(0,0);
+            });
+        }
+        
+        if (withoutBtn) {
+            withoutBtn.addEventListener('click', () => {
+                currentParams = collectParams();
+                selectedAccessories = [];
+                showContactsPage();
+                page2.classList.remove('active-page');
+                pageContacts.classList.add('active-page');
+                window.scrollTo(0,0);
+            });
+        }
+    }
+    
+    // ---------- КАТЕГОРИИ ПРИНАДЛЕЖНОСТЕЙ ----------
+    const categories = [
+        { name: "Воздуховоды и элементы их монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны и подвесы", "уплотнители и герметики"] },
+        { name: "Устройства для распределения и регулировки воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны и заслонки"] },
+        { name: "Устройства для очистки и подготовки воздуха", items: ["фильтры", "рекуператоры", "увлажнители/осушители", "ионизаторы/озонаторы"] },
+        { name: "Нагревательные и охлаждающие элементы", items: ["калориферы (нагреватели)", "охладители"] },
+        { name: "Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
+        { name: "Контрольно‑измерительные и управляющие устройства", items: ["датчики", "регуляторы и контроллеры", "приводы клапанов", "щиты управления"] },
+        { name: "Вспомогательные и защитные элементы", items: ["дефлекторы", "вытяжные зонты", "люки и дверцы", "смесительные узлы", "дренажные системы"] }
+    ];
+    
+    function renderAccessoriesPage() {
+        const equipSpan = document.getElementById('selectedEquipmentAccessories');
+        if (equipSpan) equipSpan.innerHTML = `🔧 ${currentEquipment}`;
+        const container = document.getElementById('accessoriesList');
+        if (!container) return;
+        container.innerHTML = '';
+        categories.forEach((cat) => {
+            const div = document.createElement('div');
+            div.className = 'accessory-cat';
+            div.innerHTML = `
+                <div class="accessory-header">
+                    <span>📦 ${cat.name}</span>
+                    <span class="arrow">▶</span>
+                </div>
+                <div class="accessory-items">
+                    ${cat.items.map(item => `<label><input type="checkbox" value="${item}"> ${item}</label>`).join('')}
+                </div>
+            `;
+            const header = div.querySelector('.accessory-header');
+            header.addEventListener('click', () => { div.classList.toggle('open'); });
+            container.appendChild(div);
+        });
+    }
+    
+    const submitAccessoriesBtn = document.getElementById('submitAccessoriesToContacts');
+    if (submitAccessoriesBtn) {
+        submitAccessoriesBtn.addEventListener('click', () => {
             selectedAccessories = [];
+            document.querySelectorAll('.accessory-items input:checked').forEach(cb => {
+                selectedAccessories.push(cb.value);
+            });
             showContactsPage();
-            page2.classList.remove('active-page');
+            pageAccessories.classList.remove('active-page');
             pageContacts.classList.add('active-page');
             window.scrollTo(0,0);
         });
+    }
+    
+    const backToParamsBtn = document.getElementById('backToParamsFromAccessories');
+    if (backToParamsBtn) {
+        backToParamsBtn.addEventListener('click', () => {
+            pageAccessories.classList.remove('active-page');
+            page2.classList.add('active-page');
+            window.scrollTo(0,0);
+        });
+    }
+    
+    function showContactsPage() {
+        const equipSpan = document.getElementById('selectedEquipmentContacts');
+        if (equipSpan) equipSpan.innerHTML = `🔧 ${currentEquipment}`;
+        const accessoriesDiv = document.getElementById('selectedAccessoriesDisplay');
+        if (accessoriesDiv) {
+            if (selectedAccessories.length > 0) {
+                accessoriesDiv.style.display = 'block';
+                accessoriesDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
+            } else {
+                accessoriesDiv.style.display = 'none';
+            }
+        }
     }
     
     // ---------- ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ ----------
@@ -722,12 +804,11 @@
         if (currentParams.capacity || currentParams.pressure) {
             paramsText = `Рабочая точка:\n  • Производительность: ${currentParams.capacity || 'не указано'} м³/ч\n  • Давление: ${currentParams.pressure || 'не указано'} Па`;
         } else if (currentParams.roomWidth || currentParams.roomLength || currentParams.roomHeight) {
-            paramsText = `По помещению:\n  • Ширина: ${currentParams.roomWidth || 'не указано'} м\n  • Длина: ${currentParams.roomLength || 'не указано'} м\n  • Высота: ${currentParams.roomHeight || 'не указано'} м\n  • Расстояние от вентилятора: ${currentParams.distance || 'не указано'} м`;
+            paramsText = `По помещению:\n  • Ширина помещения: ${currentParams.roomWidth || 'не указано'} м\n  • Длина помещения: ${currentParams.roomLength || 'не указано'} м\n  • Высота помещения: ${currentParams.roomHeight || 'не указано'} м\n  • Расстояние от вентилятора: ${currentParams.distance || 'не указано'} м`;
         } else {
             paramsText = 'не указаны';
         }
         
-        // Добавляем информацию о зонтах если есть
         let hoodsText = '';
         if (currentParams.hasHoods) {
             hoodsText = `\n\n🍽️ Вытяжные зонты:\n  • Количество: ${currentParams.hoodsCount || 0} шт.`;
@@ -745,83 +826,4 @@
 📊 Параметры:
 ${paramsText}${hoodsText}
 
-📦 Принадлежности: ${selectedAccessories.length > 0 ? selectedAccessories.join(', ') : 'не выбраны'}
-
-👤 Контактные данные:
-  • Имя: ${name}
-  • Email: ${email}
-  • Город: ${city}
-  • Телефон: ${phone}
-  • Комментарий: ${comment}`;
-    }
-    
-    function getMailToLink() {
-        const name = document.getElementById('contactName')?.value.trim() || '';
-        const email = document.getElementById('contactEmail')?.value.trim() || '';
-        const city = document.getElementById('contactCity')?.value.trim() || '';
-        const phone = document.getElementById('contactPhone')?.value.trim() || '';
-        const comment = document.getElementById('contactComment')?.value.trim() || '';
-        
-        let paramsText = '';
-        if (currentParams.capacity || currentParams.pressure) {
-            paramsText = `Рабочая точка: ${currentParams.capacity || '?'} м³/ч, ${currentParams.pressure || '?'} Па`;
-        } else if (currentParams.roomWidth || currentParams.roomLength || currentParams.roomHeight) {
-            paramsText = `По помещению: ${currentParams.roomWidth || '?'}×${currentParams.roomLength || '?'}×${currentParams.roomHeight || '?'} м, расстояние ${currentParams.distance || '?'} м`;
-        } else {
-            paramsText = 'не указаны';
-        }
-        
-        let hoodsText = '';
-        if (currentParams.hasHoods) {
-            hoodsText = `\nЗонты: ${currentParams.hoodsCount || 0} шт.`;
-            if (currentParams.hoods && currentParams.hoods.length > 0) {
-                currentParams.hoods.forEach((hood, idx) => {
-                    hoodsText += `\nЗонт ${idx + 1}: ${hood.width || '?'}×${hood.length || '?'}×${hood.height || '?'} мм`;
-                });
-            }
-        }
-        
-        const body = `Новая заявка с сайта
-
-Тип оборудования: ${currentEquipment}
-Параметры: ${paramsText}${hoodsText}
-Принадлежности: ${selectedAccessories.join(', ') || 'нет'}
-
-Контактные данные:
-Имя: ${name}
-Email: ${email}
-Город: ${city}
-Телефон: ${phone || 'не указан'}
-Комментарий: ${comment || 'нет'}
-
----
-Отправлено через форму подбора вентиляции`;
-        
-        return `mailto:mirovik@mir-ovik.ru?subject=${encodeURIComponent(`Заявка на вентиляцию: ${currentEquipment}`)}&body=${encodeURIComponent(body)}`;
-    }
-    
-    function showMessage(text, isSuccess = true) {
-        let msgDiv = document.querySelector('#pageContacts .success-message');
-        if (!msgDiv) {
-            msgDiv = document.createElement('div');
-            msgDiv.className = 'success-message';
-            document.querySelector('#pageContacts .form-card').appendChild(msgDiv);
-        }
-        msgDiv.innerHTML = text;
-        msgDiv.classList.add('show');
-        if (!isSuccess) {
-            msgDiv.style.background = '#fee2e2';
-            msgDiv.style.color = '#991b1b';
-        } else {
-            msgDiv.style.background = '#d1fae5';
-            msgDiv.style.color = '#065f46';
-        }
-        setTimeout(() => {
-            msgDiv.classList.remove('show');
-        }, 4000);
-    }
-    
-    function validateRequired() {
-        const name = document.getElementById('contactName')?.value.trim();
-        const email = document.getElementById('contactEmail')?.value.trim();
-        const city = document.getElementById('contactCity')?.value.trim();
+📦 Принадлежности: ${selectedAccessories.length > 0 ? selectedAccessories
