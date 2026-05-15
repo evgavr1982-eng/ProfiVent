@@ -2,127 +2,536 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Подбор вентиляции</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Мир Овик - Подбор вентиляции</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { background: #eef2f5; font-family: system-ui; padding: 20px; }
-        .app { max-width: 700px; margin: 0 auto; }
-        .page { display: none; }
-        .page.active { display: block; }
-        .card { background: white; border-radius: 24px; padding: 16px; margin-bottom: 16px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 16px; align-items: center; }
-        .card:hover { background: #fff7ed; }
-        .card-img { width: 80px; height: 80px; background: #ddd; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: gray; }
-        .card-title { font-weight: 600; }
-        .card-btn { background: #f97316; color: white; padding: 8px 16px; border-radius: 30px; display: inline-block; margin-top: 8px; font-size: 14px; }
-        .form-card { background: white; border-radius: 24px; padding: 24px; }
-        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 16px; margin-bottom: 16px; }
-        button { background: #f97316; color: white; border: none; padding: 14px; border-radius: 40px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
-        .btn-gray { background: #e2e8f0; color: #333; }
-        .back-link { text-align: center; margin-top: 16px; }
-        .back-link button { background: none; color: #f97316; width: auto; padding: 8px; text-decoration: underline; }
-        .selected-tag { background: #f1f5f9; padding: 8px 16px; border-radius: 40px; display: inline-block; margin-bottom: 20px; font-size: 14px; }
-        .mode-switch { display: flex; gap: 12px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; background: #e2e8f0; color: #333; }
-        .mode-btn.active { background: #f97316; color: white; }
-        .form-panel { display: none; }
-        .form-panel.show { display: block; }
-        .double-buttons { display: flex; gap: 12px; }
-        .hoods-section { display: none; background: #f8fafc; padding: 16px; border-radius: 20px; margin-top: 16px; }
-        .hoods-section.show { display: block; }
-        .hood-item { border-top: 1px solid #ddd; padding-top: 16px; margin-top: 16px; }
-        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-        hr { margin: 20px 0; }
-        .telegram-link { display: block; background: #0088cc; color: white; text-align: center; padding: 14px; border-radius: 40px; text-decoration: none; margin-top: 12px; }
-        .success-message { background: #d1fae5; color: #065f46; padding: 12px; border-radius: 16px; margin-top: 16px; display: none; }
-        .success-message.show { display: block; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #eef2f5 0%, #e2e8f0 100%);
+            font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
+            padding: 24px 16px 60px;
+            min-height: 100vh;
+        }
+
+        .app {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Анимации страниц */
+        .page {
+            display: none;
+            animation: fadeIn 0.35s ease-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Прогресс-бар */
+        .step-track {
+            margin-bottom: 28px;
+        }
+        .step-progress {
+            background: rgba(224, 231, 237, 0.8);
+            border-radius: 40px;
+            height: 8px;
+            overflow: hidden;
+            backdrop-filter: blur(4px);
+        }
+        .step-fill {
+            background: linear-gradient(90deg, #f97316, #ea580c);
+            height: 100%;
+            border-radius: 40px;
+            transition: width 0.4s ease;
+            box-shadow: 0 0 6px rgba(249,115,22,0.4);
+        }
+        .step-text {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .step-text span.active-step {
+            color: #f97316;
+            font-weight: 600;
+        }
+
+        /* Карточки выбора */
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            text-align: center;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 8px;
+        }
+        .subhead {
+            text-align: center;
+            color: #5b6e8c;
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+        .grid-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(4px);
+            border-radius: 28px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12);
+            border: 1px solid rgba(255,255,255,0.5);
+        }
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 24px 40px -12px rgba(0,0,0,0.2);
+            border-color: #f97316;
+        }
+        .card-img {
+            height: 170px;
+            background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+        }
+        .card-info {
+            padding: 20px 18px 24px;
+        }
+        .card-title {
+            font-weight: 700;
+            font-size: 18px;
+            margin-bottom: 14px;
+            color: #0f172a;
+            line-height: 1.35;
+        }
+        .card-btn {
+            background: #f97316;
+            color: white;
+            text-align: center;
+            padding: 10px 14px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: inline-block;
+            width: auto;
+            box-shadow: 0 2px 6px rgba(249,115,22,0.3);
+        }
+        .card:hover .card-btn {
+            background: #ea580c;
+            transform: scale(0.97);
+        }
+
+        /* Формы */
+        .form-card {
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(4px);
+            border-radius: 36px;
+            padding: 28px 24px 36px;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .form-card h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 8px;
+        }
+        .selected-tag {
+            background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 500;
+            margin: 12px 0 24px;
+            display: inline-block;
+            color: #1e293b;
+        }
+        .mode-switch {
+            display: flex;
+            gap: 12px;
+            background: #f1f5f9;
+            padding: 6px;
+            border-radius: 60px;
+            margin-bottom: 28px;
+        }
+        .mode-btn {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 12px 8px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #475569;
+        }
+        .mode-btn.active {
+            background: white;
+            color: #f97316;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .form-panel {
+            display: none;
+        }
+        .form-panel.show {
+            display: block;
+            animation: slideDown 0.25s ease;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-8px);}
+            to { opacity: 1; transform: translateY(0);}
+        }
+        .input-field {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: 600;
+            display: block;
+            margin-bottom: 8px;
+            color: #1e293b;
+            font-size: 14px;
+        }
+        .input-wrapper {
+            position: relative;
+        }
+        .input-wrapper input, .input-wrapper textarea {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 16px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 24px;
+            font-family: inherit;
+            transition: all 0.2s;
+            background: white;
+        }
+        .input-wrapper input:focus, .input-wrapper textarea:focus {
+            outline: none;
+            border-color: #f97316;
+            box-shadow: 0 0 0 3px rgba(249,115,22,0.1);
+        }
+        .unit-badge {
+            position: absolute;
+            right: 16px;
+            top: 14px;
+            background: #f1f5f9;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #475569;
+        }
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        .btn-next, .btn-secondary {
+            width: 100%;
+            border: none;
+            padding: 16px;
+            border-radius: 60px;
+            font-weight: 700;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 8px;
+        }
+        .btn-next {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            box-shadow: 0 4px 12px rgba(249,115,22,0.3);
+        }
+        .btn-next:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(249,115,22,0.4);
+        }
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+        .double-buttons {
+            display: flex;
+            gap: 14px;
+            margin-top: 24px;
+        }
+        .double-buttons button {
+            margin-top: 0;
+            flex: 1;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 24px;
+        }
+        .back-link button {
+            background: none;
+            border: none;
+            color: #f97316;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: underline;
+            padding: 8px;
+        }
+
+        /* Принадлежности */
+        .accessory-cat {
+            background: white;
+            border-radius: 24px;
+            margin-bottom: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .accessory-header {
+            padding: 18px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            background: #fafcff;
+            transition: 0.2s;
+        }
+        .accessory-header:hover {
+            background: #fff7ed;
+        }
+        .accessory-header .arrow {
+            transition: transform 0.2s;
+            font-size: 14px;
+            color: #f97316;
+        }
+        .accessory-cat.open .arrow {
+            transform: rotate(90deg);
+        }
+        .accessory-items {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.35s ease;
+            padding: 0 18px;
+        }
+        .accessory-cat.open .accessory-items {
+            max-height: 360px;
+            padding: 0 18px 18px 18px;
+        }
+        .accessory-items label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: normal;
+            padding: 10px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .accessory-items input {
+            width: 18px;
+            height: 18px;
+            accent-color: #f97316;
+        }
+
+        /* Зонты */
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            padding: 14px;
+            background: #f8fafc;
+            border-radius: 28px;
+            margin: 20px 0 16px;
+            font-weight: 500;
+        }
+        .hoods-section {
+            background: #f8fafc;
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        .hoods-section.show {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        .hood-item {
+            border-top: 1px solid #e2e8f0;
+            padding-top: 18px;
+            margin-top: 18px;
+        }
+        .hood-item:first-child {
+            border-top: none;
+            padding-top: 0;
+            margin-top: 0;
+        }
+        .hood-title {
+            font-weight: 700;
+            margin-bottom: 14px;
+            color: #f97316;
+        }
+
+        .telegram-link {
+            display: block;
+            background: linear-gradient(135deg, #0088cc, #006699);
+            color: white;
+            text-align: center;
+            padding: 15px;
+            border-radius: 60px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: 0.2s;
+        }
+        .telegram-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,136,204,0.3);
+        }
+        hr {
+            margin: 24px 0;
+            border: none;
+            border-top: 2px solid #e2e8f0;
+        }
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 14px;
+            border-radius: 24px;
+            margin-top: 20px;
+            display: none;
+            font-weight: 500;
+            text-align: center;
+        }
+        .success-message.show {
+            display: block;
+        }
+        .selected-items-list {
+            background: #f1f5f9;
+            padding: 14px 18px;
+            border-radius: 24px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+        @media (max-width: 560px) {
+            .double-buttons { flex-direction: column; gap: 10px; }
+            .grid-3 { gap: 8px; }
+            .form-card { padding: 20px; }
+        }
     </style>
 </head>
 <body>
 <div class="app">
-    <!-- СТРАНИЦА 1 -->
+    <!-- СТРАНИЦА 1: ВЫБОР ТИПА -->
     <div id="page1" class="page active">
-        <h1 style="margin-bottom: 20px;">Что будем вентилировать?</h1>
-        <div class="card" data-equipment="Вентиляция для малярных работ">
-            <div class="card-img">🎨</div>
-            <div><div class="card-title">Вентиляция для малярных работ</div><div class="card-btn">Выбрать →</div></div>
-        </div>
-        <div class="card" data-equipment="Вентиляция для Кухни">
-            <div class="card-img">🍳</div>
-            <div><div class="card-title">Вентиляция для Кухни</div><div class="card-btn">Выбрать →</div></div>
-        </div>
-        <div class="card" data-equipment="Промышленная вентиляция">
-            <div class="card-img">🏭</div>
-            <div><div class="card-title">Промышленная вентиляция</div><div class="card-btn">Выбрать →</div></div>
-        </div>
-        <div class="card" data-equipment="Принадлежности к вентиляции">
-            <div class="card-img">📦</div>
-            <div><div class="card-title">Принадлежности к вентиляции</div><div class="card-btn">Выбрать →</div></div>
+        <h1>🌬️ Подбор вентиляции</h1>
+        <div class="subhead">Выберите тип оборудования — подберём оптимальное решение</div>
+        <div class="grid-cards">
+            <div class="card" data-equipment="Вентиляция для малярных работ">
+                <div class="card-img">🎨</div>
+                <div class="card-info"><div class="card-title">Вентиляция для малярных работ</div><div class="card-btn">Выбрать →</div></div>
+            </div>
+            <div class="card" data-equipment="Вентиляция для Кухни">
+                <div class="card-img">🍳</div>
+                <div class="card-info"><div class="card-title">Вентиляция для Кухни</div><div class="card-btn">Выбрать →</div></div>
+            </div>
+            <div class="card" data-equipment="Промышленная вентиляция">
+                <div class="card-img">🏭</div>
+                <div class="card-info"><div class="card-title">Промышленная вентиляция</div><div class="card-btn">Выбрать →</div></div>
+            </div>
+            <div class="card" data-equipment="Принадлежности к вентиляции">
+                <div class="card-img">📦</div>
+                <div class="card-info"><div class="card-title">Принадлежности к вентиляции</div><div class="card-btn">Выбрать →</div></div>
+            </div>
         </div>
     </div>
 
     <!-- СТРАНИЦА 2: ПАРАМЕТРЫ -->
     <div id="page2" class="page">
+        <div class="step-track"><div class="step-progress"><div class="step-fill" style="width: 33%"></div></div><div class="step-text"><span>✅ Тип</span><span class="active-step">⚙️ Параметры</span><span>📋 Контакты</span></div></div>
         <div class="form-card">
+            <h2>Параметры системы</h2>
             <div id="selectedTitle" class="selected-tag">—</div>
             <div class="mode-switch">
-                <button class="mode-btn active" data-mode="work">Рабочая точка</button>
-                <button class="mode-btn" data-mode="room">По помещению</button>
+                <button class="mode-btn active" data-mode="work">🎯 Рабочая точка</button>
+                <button class="mode-btn" data-mode="room">📐 По помещению</button>
             </div>
             <div id="workPanel" class="form-panel show">
-                <input type="number" id="capacity" placeholder="Производительность (м³/ч)">
-                <input type="number" id="pressure" placeholder="Давление (Па)">
+                <div class="input-field"><label>Производительность</label><div class="input-wrapper"><input type="number" id="capacity" placeholder="1200"><span class="unit-badge">м³/ч</span></div></div>
+                <div class="input-field"><label>Давление (сопротивление сети)</label><div class="input-wrapper"><input type="number" id="pressure" placeholder="250"><span class="unit-badge">Па</span></div></div>
             </div>
             <div id="roomPanel" class="form-panel">
                 <div class="grid-3">
-                    <input type="number" id="roomW" placeholder="Ширина (м)">
-                    <input type="number" id="roomL" placeholder="Длина (м)">
-                    <input type="number" id="roomH" placeholder="Высота (м)">
+                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="roomW" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="roomL" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="roomH" placeholder="м"><span class="unit-badge">м</span></div></div>
                 </div>
-                <input type="number" id="distance" placeholder="Расстояние от вентилятора до помещения (м)">
+                <div class="input-field"><label>Расстояние от вентилятора до помещения</label><div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div></div>
             </div>
 
             <div id="kitchenBlock" style="display:none;">
-                <label style="display: flex; gap: 12px; align-items: center; margin: 16px 0; cursor: pointer;">
-                    <input type="checkbox" id="hasHoods"> <span>🍽️ Есть вытяжные зонты</span>
-                </label>
+                <label class="checkbox-label"><input type="checkbox" id="hasHoods"> <span>🍽️ Есть вытяжные зонты</span></label>
                 <div id="hoodsSection" class="hoods-section">
-                    <input type="number" id="hoodsCount" placeholder="Количество зонтов" min="1" max="10">
+                    <div class="input-field"><label>Количество зонтов</label><div class="input-wrapper"><input type="number" id="hoodsCount" min="1" max="10" placeholder="1"><span class="unit-badge">шт</span></div></div>
                     <div id="hoodsContainer"></div>
                 </div>
             </div>
 
-            <div class="double-buttons" style="margin-top: 20px;">
-                <button id="withAccessories">➕ С комплектующими</button>
-                <button id="withoutAccessories" class="btn-gray">➡️ Без комплектующих</button>
+            <div class="double-buttons">
+                <button id="withAccessories" class="btn-next">➕ Добавить комплектующие</button>
+                <button id="withoutAccessories" class="btn-secondary">➡️ Только вентилятор</button>
             </div>
-            <div class="back-link"><button id="backToMain">← Назад</button></div>
+            <div class="back-link"><button id="backToMain">← Вернуться к выбору типа</button></div>
         </div>
     </div>
 
-    <!-- СТРАНИЦА 2.5: ВЫБОР ПРИНАДЛЕЖНОСТЕЙ -->
-    <div id="pageAccessories" class="page">
+    <!-- СТРАНИЦА 2.5: ПРИНАДЛЕЖНОСТИ -->
+    <div id="pageAcc" class="page">
+        <div class="step-track"><div class="step-progress"><div class="step-fill" style="width: 66%"></div></div><div class="step-text"><span>✅ Тип</span><span>⚙️ Параметры</span><span class="active-step">📦 Комплектующие</span><span>📋 Контакты</span></div></div>
         <div class="form-card">
+            <h2>Выберите комплектующие</h2>
             <div id="accTitle" class="selected-tag">—</div>
             <div id="accessoriesList"></div>
-            <button id="submitAccessories">Выбрать → Далее</button>
-            <div class="back-link"><button id="backToParams">← Назад</button></div>
+            <button id="submitAccessories" class="btn-next">Выбрать → Перейти к контактам</button>
+            <div class="back-link"><button id="backToParams">← Назад к параметрам</button></div>
         </div>
     </div>
 
     <!-- СТРАНИЦА 3: КОНТАКТЫ -->
     <div id="pageContacts" class="page">
+        <div class="step-track"><div class="step-progress"><div class="step-fill" style="width: 100%"></div></div><div class="step-text"><span>✅ Тип</span><span>⚙️ Параметры</span><span>📦 Комплектующие</span><span class="active-step">📋 Контакты</span></div></div>
         <div class="form-card">
+            <h2>Оставьте контакты</h2>
             <div id="contactTitle" class="selected-tag">—</div>
-            <div id="selectedAccList" style="background:#f1f5f9; padding:12px; border-radius:16px; margin-bottom:16px; display:none;"></div>
-            <input type="text" id="userName" placeholder="* Ваше имя">
-            <input type="email" id="userEmail" placeholder="* Электронная почта">
-            <input type="text" id="userCity" placeholder="* Город">
-            <input type="text" id="userPhone" placeholder="Телефон (необязательно)">
-            <textarea id="userComment" rows="3" placeholder="Комментарий"></textarea>
+            <div id="selectedAccList" class="selected-items-list" style="display:none;"></div>
+            <div class="input-field"><label><span style="color:#f97316;">*</span> Ваше имя</label><div class="input-wrapper"><input type="text" id="userName" placeholder="Иван Иванов"></div></div>
+            <div class="input-field"><label><span style="color:#f97316;">*</span> Электронная почта</label><div class="input-wrapper"><input type="email" id="userEmail" placeholder="ivan@example.com"></div></div>
+            <div class="input-field"><label><span style="color:#f97316;">*</span> Город</label><div class="input-wrapper"><input type="text" id="userCity" placeholder="Москва"></div></div>
+            <div class="input-field"><label>Телефон (необязательно)</label><div class="input-wrapper"><input type="text" id="userPhone" placeholder="+7 XXX XXX XX XX"></div></div>
+            <div class="input-field"><label>Комментарий</label><div class="input-wrapper"><textarea id="userComment" rows="3" placeholder="Дополнительная информация..."></textarea></div></div>
             <hr>
-            <button id="copyBtn">📋 Скопировать заявку</button>
-            <a href="https://t.me/MIR_OVIK" target="_blank" class="telegram-link">📨 Отправить в Telegram</a>
-            <button id="emailBtn" class="btn-gray">✉️ Отправить на почту</button>
+            <button id="copyBtn" class="btn-next">📋 Скопировать заявку</button>
+            <a href="https://t.me/MIR_OVIK" target="_blank" class="telegram-link">📨 Отправить в Telegram →</a>
+            <button id="emailBtn" class="btn-secondary">✉️ Отправить на почту</button>
             <div class="back-link"><button id="backFromContacts">← Назад</button></div>
             <div id="msg" class="success-message"></div>
         </div>
@@ -139,21 +548,21 @@
     // ЭЛЕМЕНТЫ
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
-    const pageAcc = document.getElementById('pageAccessories');
+    const pageAcc = document.getElementById('pageAcc');
     const pageContacts = document.getElementById('pageContacts');
 
     // КАТЕГОРИИ ПРИНАДЛЕЖНОСТЕЙ
     const categories = [
-        { name: "Воздуховоды и элементы монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны", "уплотнители"] },
-        { name: "Устройства распределения воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны"] },
-        { name: "Очистка и подготовка воздуха", items: ["фильтры", "рекуператоры", "увлажнители", "ионизаторы"] },
-        { name: "Нагревательные и охлаждающие", items: ["калориферы", "охладители"] },
-        { name: "Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
-        { name: "Управление", items: ["датчики", "контроллеры", "приводы", "щиты"] },
-        { name: "Вспомогательные", items: ["дефлекторы", "зонты", "люки", "дренаж"] }
+        { name: "📦 Воздуховоды и элементы монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны", "уплотнители"] },
+        { name: "🌬️ Устройства распределения воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны"] },
+        { name: "🧹 Очистка и подготовка воздуха", items: ["фильтры", "рекуператоры", "увлажнители", "ионизаторы"] },
+        { name: "🔥 Нагревательные и охлаждающие", items: ["калориферы", "охладители"] },
+        { name: "🔇 Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
+        { name: "📊 Управление и контроль", items: ["датчики", "контроллеры", "приводы", "щиты"] },
+        { name: "🛠️ Вспомогательные элементы", items: ["дефлекторы", "зонты", "люки", "дренаж"] }
     ];
 
-    // ФУНКЦИЯ ДЛЯ ЗОНТОВ
+    // ГЕНЕРАЦИЯ ПОЛЕЙ ЗОНТОВ
     function generateHoods(count) {
         const container = document.getElementById('hoodsContainer');
         if(!container) return;
@@ -163,7 +572,7 @@
             hoodsData.push({w:'', l:'', h:''});
             const div = document.createElement('div');
             div.className = 'hood-item';
-            div.innerHTML = `<b>Зонт ${i+1}</b><div class="grid-3" style="margin-top:8px;"><input type="number" placeholder="Ширина мм" class="hw${i}"><input type="number" placeholder="Длина мм" class="hl${i}"><input type="number" placeholder="Высота мм" class="hh${i}"></div>`;
+            div.innerHTML = `<div class="hood-title">📐 Зонт ${i+1}</div><div class="grid-3"><div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" class="hw${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div><div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" class="hl${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div><div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" class="hh${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div></div>`;
             container.appendChild(div);
             document.querySelector(`.hw${i}`)?.addEventListener('input', (e) => hoodsData[i].w = e.target.value);
             document.querySelector(`.hl${i}`)?.addEventListener('input', (e) => hoodsData[i].l = e.target.value);
@@ -177,23 +586,23 @@
         const isKitchen = (currentEquipment === "Вентиляция для Кухни");
         const kitchenBlock = document.getElementById('kitchenBlock');
         kitchenBlock.style.display = isKitchen ? 'block' : 'none';
-        
-        // Сброс зонтов
         const hoodsSection = document.getElementById('hoodsSection');
         hoodsSection.classList.remove('show');
-        document.getElementById('hasHoods').checked = false;
+        const hasHoodsCheck = document.getElementById('hasHoods');
+        if(hasHoodsCheck) hasHoodsCheck.checked = false;
         document.getElementById('hoodsContainer').innerHTML = '';
         hoodsData = [];
-        
-        document.getElementById('hasHoods').onchange = (e) => {
-            if(e.target.checked) hoodsSection.classList.add('show');
-            else { hoodsSection.classList.remove('show'); document.getElementById('hoodsContainer').innerHTML = ''; hoodsData = []; }
-        };
-        document.getElementById('hoodsCount').oninput = (e) => {
-            let c = parseInt(e.target.value) || 1;
-            if(c>10) c=10; if(c<1) c=1;
-            generateHoods(c);
-        };
+        if(isKitchen) {
+            document.getElementById('hasHoods').onchange = (e) => {
+                if(e.target.checked) hoodsSection.classList.add('show');
+                else { hoodsSection.classList.remove('show'); document.getElementById('hoodsContainer').innerHTML = ''; hoodsData = []; }
+            };
+            document.getElementById('hoodsCount').oninput = (e) => {
+                let c = parseInt(e.target.value) || 1;
+                if(c>10) c=10; if(c<1) c=1;
+                generateHoods(c);
+            };
+        }
     }
 
     // СБОР ПАРАМЕТРОВ
@@ -201,38 +610,33 @@
         const isWork = document.querySelector('#workPanel').classList.contains('show');
         let p = {};
         if(isWork) {
-            p.capacity = document.getElementById('capacity').value;
-            p.pressure = document.getElementById('pressure').value;
+            p.capacity = document.getElementById('capacity')?.value || '';
+            p.pressure = document.getElementById('pressure')?.value || '';
         } else {
-            p.roomW = document.getElementById('roomW').value;
-            p.roomL = document.getElementById('roomL').value;
-            p.roomH = document.getElementById('roomH').value;
-            p.distance = document.getElementById('distance').value;
+            p.roomW = document.getElementById('roomW')?.value || '';
+            p.roomL = document.getElementById('roomL')?.value || '';
+            p.roomH = document.getElementById('roomH')?.value || '';
+            p.distance = document.getElementById('distance')?.value || '';
         }
-        if(currentEquipment === "Вентиляция для Кухни" && document.getElementById('hasHoods').checked) {
+        if(currentEquipment === "Вентиляция для Кухни" && document.getElementById('hasHoods')?.checked) {
             p.hasHoods = true;
-            p.hoodsCount = document.getElementById('hoodsCount').value;
-            p.hoods = hoodsData;
+            p.hoodsCount = document.getElementById('hoodsCount')?.value || 0;
+            p.hoods = hoodsData.filter(h => h.w || h.l || h.h);
         }
         return p;
     }
 
-    // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ
+    // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ (АККОРДЕОН)
     function renderAccessories() {
         document.getElementById('accTitle').innerHTML = `🔧 ${currentEquipment}`;
         const container = document.getElementById('accessoriesList');
         container.innerHTML = '';
         categories.forEach(cat => {
             const div = document.createElement('div');
-            div.style.cssText = 'background:#f8fafc; border-radius:16px; margin-bottom:12px; overflow:hidden;';
-            div.innerHTML = `<div style="padding:16px; cursor:pointer; background:white; font-weight:600;" class="catHeader">📦 ${cat.name} <span style="float:right;">▼</span></div><div class="catItems" style="padding:0 16px; max-height:0; overflow:hidden; transition:0.2s;">${cat.items.map(i => `<label style="display:block; padding:8px 0;"><input type="checkbox" value="${i}"> ${i}</label>`).join('')}</div>`;
-            const header = div.querySelector('.catHeader');
-            const itemsDiv = div.querySelector('.catItems');
-            header.onclick = () => {
-                const isOpen = itemsDiv.style.maxHeight;
-                itemsDiv.style.maxHeight = isOpen ? '0' : '300px';
-                header.innerHTML = `📦 ${cat.name} <span style="float:right;">${isOpen ? '▼' : '▲'}</span>`;
-            };
+            div.className = 'accessory-cat';
+            div.innerHTML = `<div class="accessory-header"><span>${cat.name}</span><span class="arrow">▶</span></div><div class="accessory-items">${cat.items.map(i => `<label><input type="checkbox" value="${i}"> ${i}</label>`).join('')}</div>`;
+            const header = div.querySelector('.accessory-header');
+            header.onclick = () => div.classList.toggle('open');
             container.appendChild(div);
         });
     }
@@ -247,24 +651,21 @@
         } else accDiv.style.display = 'none';
     }
 
-    // ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ
+    // ФОРМИРОВАНИЕ ЗАЯВКИ
     function getOrderText() {
         const name = document.getElementById('userName').value.trim() || 'не указано';
         const email = document.getElementById('userEmail').value.trim() || 'не указан';
         const city = document.getElementById('userCity').value.trim() || 'не указан';
         const phone = document.getElementById('userPhone').value.trim() || 'не указан';
         const comment = document.getElementById('userComment').value.trim() || 'нет';
-        
         let paramsText = '';
         if(currentParams.capacity) paramsText = `Рабочая точка: ${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
         else paramsText = `По помещению: ${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, расстояние ${currentParams.distance||'?'} м`;
-        
         let hoodsText = '';
-        if(currentParams.hasHoods && currentParams.hoods) {
-            hoodsText = `\nЗонты (${currentParams.hoodsCount||0} шт.):`;
-            currentParams.hoods.forEach((h,i) => hoodsText += `\n  Зонт ${i+1}: ${h.w||'?'}×${h.l||'?'}×${h.h||'?'} мм`);
+        if(currentParams.hasHoods && currentParams.hoods?.length) {
+            hoodsText = `\n🍽️ Зонты (${currentParams.hoodsCount||0} шт.):`;
+            currentParams.hoods.forEach((h,i) => hoodsText += `\n   Зонт ${i+1}: ${h.w||'?'}×${h.l||'?'}×${h.h||'?'} мм`);
         }
-        
         return `🔔 НОВАЯ ЗАЯВКА НА ВЕНТИЛЯЦИЮ
 
 📌 Тип: ${currentEquipment}
@@ -274,12 +675,12 @@ ${paramsText}${hoodsText}
 
 📦 Принадлежности: ${selectedAccessories.join(', ') || 'нет'}
 
-👤 Контакты:
-  Имя: ${name}
-  Email: ${email}
-  Город: ${city}
-  Телефон: ${phone}
-  Комментарий: ${comment}`;
+👤 Контактные данные:
+  • Имя: ${name}
+  • Email: ${email}
+  • Город: ${city}
+  • Телефон: ${phone}
+  • Комментарий: ${comment}`;
     }
 
     function getMailLink() {
@@ -293,20 +694,20 @@ ${paramsText}${hoodsText}
         else paramsText = `${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, ${currentParams.distance||'?'} м`;
         let hoodsText = '';
         if(currentParams.hasHoods) hoodsText = `\nЗонты: ${currentParams.hoodsCount||0} шт.`;
-        const body = `Новая заявка\n\nТип: ${currentEquipment}\nПараметры: ${paramsText}${hoodsText}\nПринадлежности: ${selectedAccessories.join(', ') || 'нет'}\n\nИмя: ${name}\nEmail: ${email}\nГород: ${city}\nТелефон: ${phone}\nКомментарий: ${comment}`;
+        const body = `Новая заявка с сайта\n\nТип: ${currentEquipment}\nПараметры: ${paramsText}${hoodsText}\nПринадлежности: ${selectedAccessories.join(', ') || 'нет'}\n\nКонтакты:\nИмя: ${name}\nEmail: ${email}\nГород: ${city}\nТелефон: ${phone}\nКомментарий: ${comment}`;
         return `mailto:mirovik@mir-ovik.ru?subject=${encodeURIComponent(`Заявка: ${currentEquipment}`)}&body=${encodeURIComponent(body)}`;
     }
 
     function showMessage(text, isError=false) {
-        const msgDiv = document.getElementById('msg');
-        msgDiv.innerHTML = text;
-        msgDiv.classList.add('show');
-        if(isError) msgDiv.style.background = '#fee2e2';
-        else msgDiv.style.background = '#d1fae5';
-        setTimeout(() => msgDiv.classList.remove('show'), 3000);
+        const msg = document.getElementById('msg');
+        msg.innerHTML = text;
+        msg.classList.add('show');
+        msg.style.background = isError ? '#fee2e2' : '#d1fae5';
+        msg.style.color = isError ? '#991b1b' : '#065f46';
+        setTimeout(() => msg.classList.remove('show'), 3500);
     }
 
-    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ НА СТР.2
+    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ
     function initModeSwitch() {
         const workBtn = document.querySelector('[data-mode="work"]');
         const roomBtn = document.querySelector('[data-mode="room"]');
@@ -332,67 +733,4 @@ ${paramsText}${hoodsText}
                 page2.classList.add('active');
                 initModeSwitch();
             }
-        };
-    });
-
-    // КНОПКИ НА СТР.2
-    document.getElementById('withAccessories').onclick = () => {
-        currentParams = collectParams();
-        renderAccessories();
-        page2.classList.remove('active');
-        pageAcc.classList.add('active');
-    };
-    document.getElementById('withoutAccessories').onclick = () => {
-        currentParams = collectParams();
-        selectedAccessories = [];
-        showContacts();
-        page2.classList.remove('active');
-        pageContacts.classList.add('active');
-    };
-    document.getElementById('backToMain').onclick = () => {
-        page2.classList.remove('active');
-        page1.classList.add('active');
-    };
-
-    // КНОПКИ НА СТР. ПРИНАДЛЕЖНОСТЕЙ
-    document.getElementById('submitAccessories').onclick = () => {
-        selectedAccessories = [];
-        document.querySelectorAll('#accessoriesList input:checked').forEach(cb => selectedAccessories.push(cb.value));
-        showContacts();
-        pageAcc.classList.remove('active');
-        pageContacts.classList.add('active');
-    };
-    document.getElementById('backToParams').onclick = () => {
-        pageAcc.classList.remove('active');
-        page2.classList.add('active');
-    };
-
-    // КНОПКИ НА СТР. КОНТАКТОВ
-    document.getElementById('copyBtn').onclick = () => {
-        if(!document.getElementById('userName').value.trim() || !document.getElementById('userEmail').value.trim() || !document.getElementById('userCity').value.trim()) {
-            showMessage('❌ Заполните имя, email и город', true);
-            return;
-        }
-        navigator.clipboard.writeText(getOrderText());
-        showMessage('✅ Заявка скопирована! Отправьте её в Telegram или по почте.');
-    };
-    document.getElementById('emailBtn').onclick = () => {
-        if(!document.getElementById('userName').value.trim() || !document.getElementById('userEmail').value.trim() || !document.getElementById('userCity').value.trim()) {
-            showMessage('❌ Заполните имя, email и город', true);
-            return;
-        }
-        window.location.href = getMailLink();
-        showMessage('✉️ Открывается почтовый клиент');
-    };
-    document.getElementById('backFromContacts').onclick = () => {
-        if(selectedAccessories.length > 0) {
-            pageContacts.classList.remove('active');
-            pageAcc.classList.add('active');
-        } else {
-            pageContacts.classList.remove('active');
-            page2.classList.add('active');
-        }
-    };
-</script>
-</body>
-</html>
+       
