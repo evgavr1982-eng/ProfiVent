@@ -2,691 +2,397 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Подбор вентиляции — полная версия</title>
+    <title>Подбор вентиляции</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #eef2f5;
-            font-family: system-ui, 'Segoe UI', 'Roboto', sans-serif;
-            padding: 20px 16px 60px;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-        }
-
-        .app {
-            max-width: 800px;
-            width: 100%;
-        }
-
-        .page {
-            display: none;
-            animation: fadePage 0.25s ease;
-        }
-
-        .page.active-page {
-            display: block;
-        }
-
-        @keyframes fadePage {
-            from { opacity: 0; transform: translateY(8px);}
-            to { opacity: 1; transform: translateY(0);}
-        }
-
-        /* Прогресс-бар */
-        .step-track {
-            margin-bottom: 24px;
-        }
-        .step-progress {
-            background: #e0e7ed;
-            border-radius: 40px;
-            height: 8px;
-        }
-        .step-fill {
-            background: #f97316;
-            height: 100%;
-            border-radius: 40px;
-            transition: width 0.3s;
-        }
-        .step-text {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 8px;
-            font-size: 13px;
-            color: #475569;
-        }
-
-        /* Карточки */
-        h1 {
-            font-size: 28px;
-            text-align: center;
-            margin-bottom: 8px;
-            color: #0a2540;
-        }
-        .subhead {
-            text-align: center;
-            color: #5b6e8c;
-            margin-bottom: 32px;
-        }
-        .grid-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 24px;
-        }
-        .card {
-            background: white;
-            border-radius: 28px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
-        }
-        .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 20px 30px rgba(0,0,0,0.1);
-        }
-        .card-img {
-            width: 100%;
-            height: 180px;
-            background: #f0f2f5;
-            overflow: hidden;
-        }
-        .card-img img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .card-info {
-            padding: 20px 18px 24px;
-        }
-        .card-title {
-            font-weight: 700;
-            font-size: 18px;
-            margin-bottom: 18px;
-            line-height: 1.3;
-            color: #1e293b;
-        }
-        .card-btn {
-            background: #f97316;
-            color: white;
-            text-align: center;
-            padding: 10px;
-            border-radius: 40px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-        .card:hover .card-btn {
-            background: #ea580c;
-        }
-
-        /* Формы */
-        .form-card {
-            background: white;
-            border-radius: 32px;
-            padding: 28px 24px 32px;
-            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-        }
-        .form-card h2 {
-            font-size: 26px;
-            font-weight: 600;
-            color: #0a2540;
-        }
-        .selected-tag {
-            background: #f1f5f9;
-            padding: 8px 16px;
-            border-radius: 40px;
-            font-size: 14px;
-            margin: 12px 0 24px;
-            display: inline-block;
-        }
-        .mode-switch {
-            display: flex;
-            gap: 12px;
-            background: #f1f5f9;
-            padding: 6px;
-            border-radius: 60px;
-            margin-bottom: 32px;
-        }
-        .mode-btn {
-            flex: 1;
-            border: none;
-            background: transparent;
-            padding: 12px 8px;
-            border-radius: 40px;
-            font-weight: 600;
-            cursor: pointer;
-            color: #334155;
-        }
-        .mode-btn.active {
-            background: white;
-            color: #f97316;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        .form-panel {
-            display: none;
-        }
-        .form-panel.active-panel {
-            display: block;
-        }
-        .input-field {
-            margin-bottom: 24px;
-        }
-        label {
-            font-weight: 500;
-            display: block;
-            margin-bottom: 8px;
-            color: #0f2b3d;
-        }
-        .input-wrapper {
-            position: relative;
-        }
-        .input-wrapper input, .input-wrapper textarea, .input-wrapper select {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 16px;
-            border: 1.5px solid #e2e8f0;
-            border-radius: 20px;
-            font-family: inherit;
-        }
-        .input-wrapper input:focus, .input-wrapper textarea:focus {
-            outline: none;
-            border-color: #f97316;
-        }
-        .unit-badge {
-            position: absolute;
-            right: 16px;
-            top: 14px;
-            background: #f1f5f9;
-            padding: 4px 10px;
-            border-radius: 30px;
-            font-size: 13px;
-        }
-        .hint {
-            font-size: 12px;
-            color: #6c7a91;
-            margin-top: 6px;
-        }
-        .grid-3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 12px;
-        }
-        .btn-next, .btn-secondary {
-            width: 100%;
-            border: none;
-            padding: 16px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 18px;
-            cursor: pointer;
-            transition: 0.2s;
-            margin-top: 16px;
-        }
-        .btn-next {
-            background: #f97316;
-            color: white;
-        }
-        .btn-next:hover {
-            background: #ea580c;
-            transform: scale(0.98);
-        }
-        .btn-secondary {
-            background: #e2e8f0;
-            color: #1e293b;
-        }
-        .btn-secondary:hover {
-            background: #cbd5e1;
-        }
-        .double-buttons {
-            display: flex;
-            gap: 12px;
-            margin-top: 24px;
-        }
-        .double-buttons .btn-next, .double-buttons .btn-secondary {
-            margin-top: 0;
-        }
-        .back-link {
-            text-align: center;
-            margin-top: 20px;
-        }
-        .back-link button {
-            background: none;
-            border: none;
-            color: #f97316;
-            font-weight: 500;
-            cursor: pointer;
-            font-size: 14px;
-            text-decoration: underline;
-        }
-
-        /* Принадлежности — аккордеон с чекбоксами */
-        .accessories-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-top: 20px;
-        }
-        .accessory-cat {
-            background: #f8fafc;
-            border-radius: 20px;
-            border: 1px solid #e2e8f0;
-            overflow: hidden;
-        }
-        .accessory-header {
-            padding: 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            background: white;
-            transition: 0.2s;
-        }
-        .accessory-header:hover {
-            background: #fff7ed;
-        }
-        .accessory-header .arrow {
-            transition: transform 0.2s;
-        }
-        .accessory-cat.open .arrow {
-            transform: rotate(90deg);
-        }
-        .accessory-items {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            padding: 0 16px;
-        }
-        .accessory-cat.open .accessory-items {
-            max-height: 300px;
-            padding: 0 16px 16px 16px;
-        }
-        .accessory-items label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: normal;
-            padding: 8px 0;
-            cursor: pointer;
-        }
-        .accessory-items input {
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-        }
-
-        /* Hover-подсказка для кнопок принадлежностей */
-        .tooltip-wrapper {
-            position: relative;
-            flex: 1;
-        }
-        .tooltip-list {
-            visibility: hidden;
-            opacity: 0;
-            position: absolute;
-            bottom: 120%;
-            left: 0;
-            background: #1e293b;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 16px;
-            font-size: 13px;
-            width: 260px;
-            z-index: 100;
-            transition: 0.2s;
-            pointer-events: none;
-        }
-        .tooltip-wrapper:hover .tooltip-list {
-            visibility: visible;
-            opacity: 1;
-        }
-
-        .required-star {
-            color: #f97316;
-        }
-        .success-message {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 16px;
-            border-radius: 16px;
-            margin-top: 20px;
-            display: none;
-        }
-        .success-message.show {
-            display: block;
-        }
-        @media (max-width: 640px) {
-            .double-buttons { flex-direction: column; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #eef2f5; font-family: system-ui; padding: 20px; }
+        .app { max-width: 700px; margin: 0 auto; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .card { background: white; border-radius: 24px; padding: 16px; margin-bottom: 16px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; gap: 16px; align-items: center; }
+        .card:hover { background: #fff7ed; }
+        .card-img { width: 80px; height: 80px; background: #ddd; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: gray; }
+        .card-title { font-weight: 600; }
+        .card-btn { background: #f97316; color: white; padding: 8px 16px; border-radius: 30px; display: inline-block; margin-top: 8px; font-size: 14px; }
+        .form-card { background: white; border-radius: 24px; padding: 24px; }
+        input, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 16px; margin-bottom: 16px; }
+        button { background: #f97316; color: white; border: none; padding: 14px; border-radius: 40px; font-size: 16px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 8px; }
+        .btn-gray { background: #e2e8f0; color: #333; }
+        .back-link { text-align: center; margin-top: 16px; }
+        .back-link button { background: none; color: #f97316; width: auto; padding: 8px; text-decoration: underline; }
+        .selected-tag { background: #f1f5f9; padding: 8px 16px; border-radius: 40px; display: inline-block; margin-bottom: 20px; font-size: 14px; }
+        .mode-switch { display: flex; gap: 12px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; background: #e2e8f0; color: #333; }
+        .mode-btn.active { background: #f97316; color: white; }
+        .form-panel { display: none; }
+        .form-panel.show { display: block; }
+        .double-buttons { display: flex; gap: 12px; }
+        .hoods-section { display: none; background: #f8fafc; padding: 16px; border-radius: 20px; margin-top: 16px; }
+        .hoods-section.show { display: block; }
+        .hood-item { border-top: 1px solid #ddd; padding-top: 16px; margin-top: 16px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+        hr { margin: 20px 0; }
+        .telegram-link { display: block; background: #0088cc; color: white; text-align: center; padding: 14px; border-radius: 40px; text-decoration: none; margin-top: 12px; }
+        .success-message { background: #d1fae5; color: #065f46; padding: 12px; border-radius: 16px; margin-top: 16px; display: none; }
+        .success-message.show { display: block; }
     </style>
 </head>
 <body>
 <div class="app">
-    <!-- Страница 1: выбор типа -->
-    <div id="page1" class="page active-page">
-        <h1>Что будем вентилировать?</h1>
-        <div class="subhead">Выберите тип оборудования</div>
-        <div class="grid-cards">
-            <div class="card" data-equipment="Вентиляция для малярных работ">
-                <div class="card-img"><img src="https://via.placeholder.com/400x300?text=Малярные+работы" alt="малярка"></div>
-                <div class="card-info"><div class="card-title">Вентиляция для малярных работ</div><div class="card-btn">Выбрать →</div></div>
-            </div>
-            <div class="card" data-equipment="Вентиляция для Кухни">
-                <div class="card-img"><img src="https://via.placeholder.com/400x300?text=Кухня" alt="кухня"></div>
-                <div class="card-info"><div class="card-title">Вентиляция для Кухни</div><div class="card-btn">Выбрать →</div></div>
-            </div>
-            <div class="card" data-equipment="Промышленная вентиляция">
-                <div class="card-img"><img src="https://via.placeholder.com/400x300?text=Промышленная" alt="промышленная"></div>
-                <div class="card-info"><div class="card-title">Промышленная вентиляция</div><div class="card-btn">Выбрать →</div></div>
-            </div>
-            <div class="card" data-equipment="Принадлежности к вентиляции">
-                <div class="card-img"><img src="https://via.placeholder.com/400x300?text=Принадлежности" alt="принадлежности"></div>
-                <div class="card-info"><div class="card-title">Принадлежности к вентиляции</div><div class="card-btn">Выбрать →</div></div>
-            </div>
+    <!-- СТРАНИЦА 1 -->
+    <div id="page1" class="page active">
+        <h1 style="margin-bottom: 20px;">Что будем вентилировать?</h1>
+        <div class="card" data-equipment="Вентиляция для малярных работ">
+            <div class="card-img">🎨</div>
+            <div><div class="card-title">Вентиляция для малярных работ</div><div class="card-btn">Выбрать →</div></div>
+        </div>
+        <div class="card" data-equipment="Вентиляция для Кухни">
+            <div class="card-img">🍳</div>
+            <div><div class="card-title">Вентиляция для Кухни</div><div class="card-btn">Выбрать →</div></div>
+        </div>
+        <div class="card" data-equipment="Промышленная вентиляция">
+            <div class="card-img">🏭</div>
+            <div><div class="card-title">Промышленная вентиляция</div><div class="card-btn">Выбрать →</div></div>
+        </div>
+        <div class="card" data-equipment="Принадлежности к вентиляции">
+            <div class="card-img">📦</div>
+            <div><div class="card-title">Принадлежности к вентиляции</div><div class="card-btn">Выбрать →</div></div>
         </div>
     </div>
 
-    <!-- Страница 2: параметры -->
+    <!-- СТРАНИЦА 2: ПАРАМЕТРЫ -->
     <div id="page2" class="page">
-        <div class="step-track"><div class="step-progress"><div class="step-fill" style="width: 33%"></div></div><div class="step-text"><span>✅ Тип</span><span><strong>⚙️ Параметры</strong></span><span>📋 Контакты</span></div></div>
         <div class="form-card">
-            <h2 id="formTitle">Параметры системы</h2>
-            <div id="selectedEquipmentDisplay" class="selected-tag">—</div>
-            <div id="dynamicContent"></div>
-            <div class="back-link"><button id="backToTypeBtn">← Вернуться к выбору типа</button></div>
+            <div id="selectedTitle" class="selected-tag">—</div>
+            <div class="mode-switch">
+                <button class="mode-btn active" data-mode="work">Рабочая точка</button>
+                <button class="mode-btn" data-mode="room">По помещению</button>
+            </div>
+            <div id="workPanel" class="form-panel show">
+                <input type="number" id="capacity" placeholder="Производительность (м³/ч)">
+                <input type="number" id="pressure" placeholder="Давление (Па)">
+            </div>
+            <div id="roomPanel" class="form-panel">
+                <div class="grid-3">
+                    <input type="number" id="roomW" placeholder="Ширина (м)">
+                    <input type="number" id="roomL" placeholder="Длина (м)">
+                    <input type="number" id="roomH" placeholder="Высота (м)">
+                </div>
+                <input type="number" id="distance" placeholder="Расстояние от вентилятора до помещения (м)">
+            </div>
+
+            <div id="kitchenBlock" style="display:none;">
+                <label style="display: flex; gap: 12px; align-items: center; margin: 16px 0; cursor: pointer;">
+                    <input type="checkbox" id="hasHoods"> <span>🍽️ Есть вытяжные зонты</span>
+                </label>
+                <div id="hoodsSection" class="hoods-section">
+                    <input type="number" id="hoodsCount" placeholder="Количество зонтов" min="1" max="10">
+                    <div id="hoodsContainer"></div>
+                </div>
+            </div>
+
+            <div class="double-buttons" style="margin-top: 20px;">
+                <button id="withAccessories">➕ С комплектующими</button>
+                <button id="withoutAccessories" class="btn-gray">➡️ Без комплектующих</button>
+            </div>
+            <div class="back-link"><button id="backToMain">← Назад</button></div>
         </div>
     </div>
 
-    <!-- Страница 2.5: выбор принадлежностей -->
+    <!-- СТРАНИЦА 2.5: ВЫБОР ПРИНАДЛЕЖНОСТЕЙ -->
     <div id="pageAccessories" class="page">
-        <div class="step-track"><div class="step-progress"><div class="step-fill" style="width: 66%"></div></div><div class="step-text"><span>✅ Тип</span><span>⚙️ Параметры</span><span><strong>📦 Комплектующие</strong></span><span>📋 Контакты</span></div></div>
         <div class="form-card">
-            <h2>Выберите комплектующие</h2>
-            <div id="selectedEquipmentAccessories" class="selected-tag">—</div>
+            <div id="accTitle" class="selected-tag">—</div>
             <div id="accessoriesList"></div>
-            <button id="submitAccessoriesToContacts" class="btn-next">Выбрать → Перейти к контактам</button>
-            <div class="back-link"><button id="backToParamsFromAccessories">← Назад к параметрам</button></div>
+            <button id="submitAccessories">Выбрать → Далее</button>
+            <div class="back-link"><button id="backToParams">← Назад</button></div>
         </div>
     </div>
 
-    <!-- Страница 3: контакты -->
+    <!-- СТРАНИЦА 3: КОНТАКТЫ -->
     <div id="pageContacts" class="page">
-        <div class="step-track"><div class="step-progress"><div class="step-fill" style="width: 100%"></div></div><div class="step-text"><span>✅ Тип</span><span>⚙️ Параметры</span><span>📦 Комплектующие</span><span><strong>📋 Контакты</strong></span></div></div>
         <div class="form-card">
-            <h2>Оставьте контакты</h2>
-            <div id="selectedEquipmentContacts" class="selected-tag">—</div>
-            <div class="input-field">
-                <label><span class="required-star">*</span> Ваше имя</label>
-                <div class="input-wrapper"><input type="text" id="contactName" placeholder="Иван Иванов"></div>
-            </div>
-            <div class="input-field">
-                <label><span class="required-star">*</span> Электронная почта</label>
-                <div class="input-wrapper"><input type="email" id="contactEmail" placeholder="ivan@example.com"></div>
-            </div>
-            <div class="input-field">
-                <label><span class="required-star">*</span> Город</label>
-                <div class="input-wrapper"><input type="text" id="contactCity" placeholder="Москва"></div>
-            </div>
-            <div class="input-field">
-                <label>Телефон (необязательно)</label>
-                <div class="input-wrapper"><input type="text" id="contactPhone" placeholder="+7 XXX XXX XX XX"></div>
-            </div>
-            <div class="input-field">
-                <label>Комментарий</label>
-                <div class="input-wrapper"><textarea id="contactComment" rows="3" placeholder="Дополнительная информация..."></textarea></div>
-            </div>
-            <button id="sendFinalData" class="btn-next">Отправить заявку →</button>
-            <div class="back-link"><button id="backToPrevFromContacts">← Назад</button></div>
+            <div id="contactTitle" class="selected-tag">—</div>
+            <div id="selectedAccList" style="background:#f1f5f9; padding:12px; border-radius:16px; margin-bottom:16px; display:none;"></div>
+            <input type="text" id="userName" placeholder="* Ваше имя">
+            <input type="email" id="userEmail" placeholder="* Электронная почта">
+            <input type="text" id="userCity" placeholder="* Город">
+            <input type="text" id="userPhone" placeholder="Телефон (необязательно)">
+            <textarea id="userComment" rows="3" placeholder="Комментарий"></textarea>
+            <hr>
+            <button id="copyBtn">📋 Скопировать заявку</button>
+            <a href="https://t.me/MIR_OVIK" target="_blank" class="telegram-link">📨 Отправить в Telegram</a>
+            <button id="emailBtn" class="btn-gray">✉️ Отправить на почту</button>
+            <div class="back-link"><button id="backFromContacts">← Назад</button></div>
+            <div id="msg" class="success-message"></div>
         </div>
     </div>
 </div>
 
 <script>
-    // ---------- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ----------
+    // ДАННЫЕ
     let currentEquipment = "";
-    let currentParams = {};        // параметры со 2-й страницы
-    let selectedAccessories = [];   // выбранные принадлежности
-    
+    let currentParams = {};
+    let selectedAccessories = [];
+    let hoodsData = [];
+
+    // ЭЛЕМЕНТЫ
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
-    const pageAccessories = document.getElementById('pageAccessories');
+    const pageAcc = document.getElementById('pageAccessories');
     const pageContacts = document.getElementById('pageContacts');
 
-    // ---------- ОТПРАВКА ДАННЫХ ----------
-    async function sendDataToAllChannels(data) {
-        const successDiv = document.createElement('div');
-        successDiv.className = 'success-message';
-        successDiv.innerHTML = '⏳ Отправка данных...';
-        document.querySelector('#pageContacts .form-card').appendChild(successDiv);
-        
-        // 1. Почта
-        const emailData = new FormData();
-        emailData.append('email', 'mirovik@mir-ovik.ru');
-        emailData.append('subject', `Заявка: ${data.equipment}`);
-        emailData.append('message', JSON.stringify(data, null, 2));
-        try { await fetch('https://formsubmit.co/ajax/mirovik@mir-ovik.ru', { method: 'POST', body: emailData }); } catch(e) {}
-        
-        // 2. Max webhook
-        try { await fetch('https://max.ru/u/f9LHodD0cOIfnSLWgCL1zo6ijnaEZH77T42aAj3narkuj90SpwYVUYtnSuE', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }); } catch(e) {}
-        
-        // 3. Telegram
-        const botToken = '8128144029:AAHjJ-qgE7Y0B-WA68T8HwK4mi7kEewRk-Q';
-        const chatId = '950937319';
-        const text = `🔔 НОВАЯ ЗАЯВКА\n\n📌 Тип: ${data.equipment}\n📊 Параметры:\n${JSON.stringify(data.params, null, 2)}\n📦 Принадлежности: ${data.accessories?.join(', ') || 'нет'}\n\n👤 Контакты:\nИмя: ${data.contacts.name}\nEmail: ${data.contacts.email}\nГород: ${data.contacts.city}\nТелефон: ${data.contacts.phone || 'не указан'}\nКомментарий: ${data.contacts.comment || 'нет'}`;
-        try { await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: text }) }); } catch(e) {}
-        
-        successDiv.innerHTML = '✅ Заявка успешно отправлена! Наш менеджер свяжется с вами.';
-        successDiv.classList.add('show');
-        setTimeout(() => {
-            pageContacts.classList.remove('active-page');
-            page1.classList.add('active-page');
-        }, 3000);
+    // КАТЕГОРИИ ПРИНАДЛЕЖНОСТЕЙ
+    const categories = [
+        { name: "Воздуховоды и элементы монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны", "уплотнители"] },
+        { name: "Устройства распределения воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны"] },
+        { name: "Очистка и подготовка воздуха", items: ["фильтры", "рекуператоры", "увлажнители", "ионизаторы"] },
+        { name: "Нагревательные и охлаждающие", items: ["калориферы", "охладители"] },
+        { name: "Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
+        { name: "Управление", items: ["датчики", "контроллеры", "приводы", "щиты"] },
+        { name: "Вспомогательные", items: ["дефлекторы", "зонты", "люки", "дренаж"] }
+    ];
+
+    // ФУНКЦИЯ ДЛЯ ЗОНТОВ
+    function generateHoods(count) {
+        const container = document.getElementById('hoodsContainer');
+        if(!container) return;
+        container.innerHTML = '';
+        hoodsData = [];
+        for(let i=0; i<count; i++) {
+            hoodsData.push({w:'', l:'', h:''});
+            const div = document.createElement('div');
+            div.className = 'hood-item';
+            div.innerHTML = `<b>Зонт ${i+1}</b><div class="grid-3" style="margin-top:8px;"><input type="number" placeholder="Ширина мм" class="hw${i}"><input type="number" placeholder="Длина мм" class="hl${i}"><input type="number" placeholder="Высота мм" class="hh${i}"></div>`;
+            container.appendChild(div);
+            document.querySelector(`.hw${i}`)?.addEventListener('input', (e) => hoodsData[i].w = e.target.value);
+            document.querySelector(`.hl${i}`)?.addEventListener('input', (e) => hoodsData[i].l = e.target.value);
+            document.querySelector(`.hh${i}`)?.addEventListener('input', (e) => hoodsData[i].h = e.target.value);
+        }
     }
 
-    // ---------- ОТРИСОВКА СТРАНИЦЫ 2 (ПАРАМЕТРЫ) ----------
-    function renderStep2() {
-        const container = document.getElementById('dynamicContent');
-        container.innerHTML = `
-            <div class="mode-switch">
-                <button class="mode-btn active" data-mode="workpoint">🎯 Рабочая точка</button>
-                <button class="mode-btn" data-mode="room">📐 По помещению</button>
-            </div>
-            <div id="workpoint-panel" class="form-panel active-panel">
-                <div class="input-field"><label>Производительность</label><div class="input-wrapper"><input type="number" id="capacity" placeholder="1200"><span class="unit-badge">м³/ч</span></div></div>
-                <div class="input-field"><label>Давление</label><div class="input-wrapper"><input type="number" id="pressure" placeholder="250"><span class="unit-badge">Па</span></div></div>
-            </div>
-            <div id="room-panel" class="form-panel">
-                <div class="grid-3">
-                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" id="width" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" id="length" placeholder="м"><span class="unit-badge">м</span></div></div>
-                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" id="height" placeholder="м"><span class="unit-badge">м</span></div></div>
-                </div>
-                <div class="input-field"><label>Расстояние до помещения</label><div class="input-wrapper"><input type="number" id="distance" placeholder="м"><span class="unit-badge">м</span></div></div>
-            </div>
-            <div style="margin-top: 24px;">
-                <div class="tooltip-wrapper" style="margin-bottom: 12px;">
-                    <div class="btn-secondary" style="text-align:center; background:#f1f5f9;">📦 Категории комплектующих (наведи)</div>
-                    <div class="tooltip-list">
-                        <ul style="margin:0; padding-left:18px;">
-                            <li>Воздуховоды и элементы монтажа</li><li>Устройства распределения воздуха</li><li>Очистка и подготовка воздуха</li>
-                            <li>Нагревательные элементы</li><li>Шумо- и виброзащита</li><li>Контрольно-измерительные устройства</li><li>Вспомогательные элементы</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="double-buttons">
-                    <button id="withAccessoriesBtn" class="btn-next">➕ Добавить комплектующие</button>
-                    <button id="withoutAccessoriesBtn" class="btn-secondary">➡️ Только вентилятор</button>
-                </div>
-            </div>
-        `;
+    // ОТРИСОВКА СТРАНИЦЫ 2
+    function renderPage2() {
+        document.getElementById('selectedTitle').innerHTML = `🔧 ${currentEquipment}`;
+        const isKitchen = (currentEquipment === "Вентиляция для Кухни");
+        const kitchenBlock = document.getElementById('kitchenBlock');
+        kitchenBlock.style.display = isKitchen ? 'block' : 'none';
         
-        // Переключение режимов
-        const modeBtns = document.querySelectorAll('.mode-btn');
-        const workPanel = document.getElementById('workpoint-panel');
-        const roomPanelEl = document.getElementById('room-panel');
-        function setMode(mode) {
-            if (mode === 'workpoint') { workPanel.classList.add('active-panel'); roomPanelEl.classList.remove('active-panel'); }
-            else { workPanel.classList.remove('active-panel'); roomPanelEl.classList.add('active-panel'); }
-            modeBtns.forEach(btn => { const btnMode = btn.getAttribute('data-mode'); if (btnMode === mode) btn.classList.add('active'); else btn.classList.remove('active'); });
-        }
-        modeBtns.forEach(btn => btn.addEventListener('click', (e) => setMode(btn.getAttribute('data-mode'))));
+        // Сброс зонтов
+        const hoodsSection = document.getElementById('hoodsSection');
+        hoodsSection.classList.remove('show');
+        document.getElementById('hasHoods').checked = false;
+        document.getElementById('hoodsContainer').innerHTML = '';
+        hoodsData = [];
         
-        // Сбор параметров и переход
-        function collectParams() {
-            const isWorkpoint = workPanel.classList.contains('active-panel');
-            let params = {};
-            if (isWorkpoint) {
-                params.capacity = document.getElementById('capacity')?.value || '';
-                params.pressure = document.getElementById('pressure')?.value || '';
-            } else {
-                params.width = document.getElementById('width')?.value || '';
-                params.length = document.getElementById('length')?.value || '';
-                params.height = document.getElementById('height')?.value || '';
-                params.distance = document.getElementById('distance')?.value || '';
-            }
-            return params;
-        }
-        
-        document.getElementById('withAccessoriesBtn').addEventListener('click', () => {
-            currentParams = collectParams();
-            renderAccessoriesPage();
-            page2.classList.remove('active-page');
-            pageAccessories.classList.add('active-page');
-            window.scrollTo(0,0);
-        });
-        
-        document.getElementById('withoutAccessoriesBtn').addEventListener('click', () => {
-            currentParams = collectParams();
-            selectedAccessories = [];
-            renderContactsPage();
-            page2.classList.remove('active-page');
-            pageContacts.classList.add('active-page');
-            window.scrollTo(0,0);
-        });
+        document.getElementById('hasHoods').onchange = (e) => {
+            if(e.target.checked) hoodsSection.classList.add('show');
+            else { hoodsSection.classList.remove('show'); document.getElementById('hoodsContainer').innerHTML = ''; hoodsData = []; }
+        };
+        document.getElementById('hoodsCount').oninput = (e) => {
+            let c = parseInt(e.target.value) || 1;
+            if(c>10) c=10; if(c<1) c=1;
+            generateHoods(c);
+        };
     }
-    
-    // ---------- СТРАНИЦА ПРИНАДЛЕЖНОСТЕЙ (аккордеон с чекбоксами) ----------
-    const categories = [
-        { name: "Воздуховоды и элементы их монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны и подвесы", "уплотнители и герметики"] },
-        { name: "Устройства для распределения и регулировки воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны и заслонки"] },
-        { name: "Устройства для очистки и подготовки воздуха", items: ["фильтры", "рекуператоры", "увлажнители/осушители", "ионизаторы/озонаторы"] },
-        { name: "Нагревательные и охлаждающие элементы", items: ["калориферы (нагреватели)", "охладители"] },
-        { name: "Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
-        { name: "Контрольно‑измерительные и управляющие устройства", items: ["датчики", "регуляторы и контроллеры", "приводы клапанов", "щиты управления"] },
-        { name: "Вспомогательные и защитные элементы", items: ["дефлекторы", "вытяжные зонты", "люки и дверцы", "смесительные узлы", "дренажные системы"] }
-    ];
-    
-    function renderAccessoriesPage() {
-        document.getElementById('selectedEquipmentAccessories').innerHTML = `🔧 ${currentEquipment}`;
+
+    // СБОР ПАРАМЕТРОВ
+    function collectParams() {
+        const isWork = document.querySelector('#workPanel').classList.contains('show');
+        let p = {};
+        if(isWork) {
+            p.capacity = document.getElementById('capacity').value;
+            p.pressure = document.getElementById('pressure').value;
+        } else {
+            p.roomW = document.getElementById('roomW').value;
+            p.roomL = document.getElementById('roomL').value;
+            p.roomH = document.getElementById('roomH').value;
+            p.distance = document.getElementById('distance').value;
+        }
+        if(currentEquipment === "Вентиляция для Кухни" && document.getElementById('hasHoods').checked) {
+            p.hasHoods = true;
+            p.hoodsCount = document.getElementById('hoodsCount').value;
+            p.hoods = hoodsData;
+        }
+        return p;
+    }
+
+    // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ
+    function renderAccessories() {
+        document.getElementById('accTitle').innerHTML = `🔧 ${currentEquipment}`;
         const container = document.getElementById('accessoriesList');
         container.innerHTML = '';
-        categories.forEach((cat, idx) => {
+        categories.forEach(cat => {
             const div = document.createElement('div');
-            div.className = 'accessory-cat';
-            div.innerHTML = `
-                <div class="accessory-header">
-                    <span>📦 ${cat.name}</span>
-                    <span class="arrow">▶</span>
-                </div>
-                <div class="accessory-items">
-                    ${cat.items.map(item => `<label><input type="checkbox" value="${item}"> ${item}</label>`).join('')}
-                </div>
-            `;
-            const header = div.querySelector('.accessory-header');
-            header.addEventListener('click', () => {
-                div.classList.toggle('open');
-            });
+            div.style.cssText = 'background:#f8fafc; border-radius:16px; margin-bottom:12px; overflow:hidden;';
+            div.innerHTML = `<div style="padding:16px; cursor:pointer; background:white; font-weight:600;" class="catHeader">📦 ${cat.name} <span style="float:right;">▼</span></div><div class="catItems" style="padding:0 16px; max-height:0; overflow:hidden; transition:0.2s;">${cat.items.map(i => `<label style="display:block; padding:8px 0;"><input type="checkbox" value="${i}"> ${i}</label>`).join('')}</div>`;
+            const header = div.querySelector('.catHeader');
+            const itemsDiv = div.querySelector('.catItems');
+            header.onclick = () => {
+                const isOpen = itemsDiv.style.maxHeight;
+                itemsDiv.style.maxHeight = isOpen ? '0' : '300px';
+                header.innerHTML = `📦 ${cat.name} <span style="float:right;">${isOpen ? '▼' : '▲'}</span>`;
+            };
             container.appendChild(div);
         });
     }
-    
-    document.getElementById('submitAccessoriesToContacts').addEventListener('click', () => {
-        selectedAccessories = [];
-        document.querySelectorAll('.accessory-items input:checked').forEach(cb => {
-            selectedAccessories.push(cb.value);
-        });
-        renderContactsPage();
-        pageAccessories.classList.remove('active-page');
-        pageContacts.classList.add('active-page');
-        window.scrollTo(0,0);
-    });
-    
-    document.getElementById('backToParamsFromAccessories').addEventListener('click', () => {
-        pageAccessories.classList.remove('active-page');
-        page2.classList.add('active-page');
-        window.scrollTo(0,0);
-    });
-    
-    // ---------- СТРАНИЦА КОНТАКТОВ ----------
-    function renderContactsPage() {
-        document.getElementById('selectedEquipmentContacts').innerHTML = `🔧 ${currentEquipment}`;
+
+    // ПОКАЗ КОНТАКТОВ
+    function showContacts() {
+        document.getElementById('contactTitle').innerHTML = `🔧 ${currentEquipment}`;
+        const accDiv = document.getElementById('selectedAccList');
+        if(selectedAccessories.length) {
+            accDiv.style.display = 'block';
+            accDiv.innerHTML = `<span>✅ Выбранные комплектующие:</span> ${selectedAccessories.join(', ')}`;
+        } else accDiv.style.display = 'none';
     }
-    
-    document.getElementById('sendFinalData').addEventListener('click', () => {
-        const name = document.getElementById('contactName')?.value.trim();
-        const email = document.getElementById('contactEmail')?.value.trim();
-        const city = document.getElementById('contactCity')?.value.trim();
-        if (!name || !email || !city) {
-            alert('Пожалуйста, заполните обязательные поля: Имя, Email, Город');
+
+    // ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ
+    function getOrderText() {
+        const name = document.getElementById('userName').value.trim() || 'не указано';
+        const email = document.getElementById('userEmail').value.trim() || 'не указан';
+        const city = document.getElementById('userCity').value.trim() || 'не указан';
+        const phone = document.getElementById('userPhone').value.trim() || 'не указан';
+        const comment = document.getElementById('userComment').value.trim() || 'нет';
+        
+        let paramsText = '';
+        if(currentParams.capacity) paramsText = `Рабочая точка: ${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
+        else paramsText = `По помещению: ${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, расстояние ${currentParams.distance||'?'} м`;
+        
+        let hoodsText = '';
+        if(currentParams.hasHoods && currentParams.hoods) {
+            hoodsText = `\nЗонты (${currentParams.hoodsCount||0} шт.):`;
+            currentParams.hoods.forEach((h,i) => hoodsText += `\n  Зонт ${i+1}: ${h.w||'?'}×${h.l||'?'}×${h.h||'?'} мм`);
+        }
+        
+        return `🔔 НОВАЯ ЗАЯВКА НА ВЕНТИЛЯЦИЮ
+
+📌 Тип: ${currentEquipment}
+
+📊 Параметры:
+${paramsText}${hoodsText}
+
+📦 Принадлежности: ${selectedAccessories.join(', ') || 'нет'}
+
+👤 Контакты:
+  Имя: ${name}
+  Email: ${email}
+  Город: ${city}
+  Телефон: ${phone}
+  Комментарий: ${comment}`;
+    }
+
+    function getMailLink() {
+        const name = document.getElementById('userName').value.trim() || '';
+        const email = document.getElementById('userEmail').value.trim() || '';
+        const city = document.getElementById('userCity').value.trim() || '';
+        const phone = document.getElementById('userPhone').value.trim() || '';
+        const comment = document.getElementById('userComment').value.trim() || '';
+        let paramsText = '';
+        if(currentParams.capacity) paramsText = `${currentParams.capacity} м³/ч, ${currentParams.pressure||'?'} Па`;
+        else paramsText = `${currentParams.roomW||'?'}×${currentParams.roomL||'?'}×${currentParams.roomH||'?'} м, ${currentParams.distance||'?'} м`;
+        let hoodsText = '';
+        if(currentParams.hasHoods) hoodsText = `\nЗонты: ${currentParams.hoodsCount||0} шт.`;
+        const body = `Новая заявка\n\nТип: ${currentEquipment}\nПараметры: ${paramsText}${hoodsText}\nПринадлежности: ${selectedAccessories.join(', ') || 'нет'}\n\nИмя: ${name}\nEmail: ${email}\nГород: ${city}\nТелефон: ${phone}\nКомментарий: ${comment}`;
+        return `mailto:mirovik@mir-ovik.ru?subject=${encodeURIComponent(`Заявка: ${currentEquipment}`)}&body=${encodeURIComponent(body)}`;
+    }
+
+    function showMessage(text, isError=false) {
+        const msgDiv = document.getElementById('msg');
+        msgDiv.innerHTML = text;
+        msgDiv.classList.add('show');
+        if(isError) msgDiv.style.background = '#fee2e2';
+        else msgDiv.style.background = '#d1fae5';
+        setTimeout(() => msgDiv.classList.remove('show'), 3000);
+    }
+
+    // ПЕРЕКЛЮЧЕНИЕ РЕЖИМОВ НА СТР.2
+    function initModeSwitch() {
+        const workBtn = document.querySelector('[data-mode="work"]');
+        const roomBtn = document.querySelector('[data-mode="room"]');
+        const workPanel = document.getElementById('workPanel');
+        const roomPanel = document.getElementById('roomPanel');
+        workBtn.onclick = () => { workBtn.classList.add('active'); roomBtn.classList.remove('active'); workPanel.classList.add('show'); roomPanel.classList.remove('show'); };
+        roomBtn.onclick = () => { roomBtn.classList.add('active'); workBtn.classList.remove('active'); roomPanel.classList.add('show'); workPanel.classList.remove('show'); };
+    }
+
+    // ПЕРЕХОДЫ ПО КАРТОЧКАМ
+    document.querySelectorAll('.card').forEach(card => {
+        card.onclick = () => {
+            currentEquipment = card.getAttribute('data-equipment');
+            if(currentEquipment === "Принадлежности к вентиляции") {
+                currentParams = {};
+                selectedAccessories = [];
+                renderAccessories();
+                page1.classList.remove('active');
+                pageAcc.classList.add('active');
+            } else {
+                renderPage2();
+                page1.classList.remove('active');
+                page2.classList.add('active');
+                initModeSwitch();
+            }
+        };
+    });
+
+    // КНОПКИ НА СТР.2
+    document.getElementById('withAccessories').onclick = () => {
+        currentParams = collectParams();
+        renderAccessories();
+        page2.classList.remove('active');
+        pageAcc.classList.add('active');
+    };
+    document.getElementById('withoutAccessories').onclick = () => {
+        currentParams = collectParams();
+        selectedAccessories = [];
+        showContacts();
+        page2.classList.remove('active');
+        pageContacts.classList.add('active');
+    };
+    document.getElementById('backToMain').onclick = () => {
+        page2.classList.remove('active');
+        page1.classList.add('active');
+    };
+
+    // КНОПКИ НА СТР. ПРИНАДЛЕЖНОСТЕЙ
+    document.getElementById('submitAccessories').onclick = () => {
+        selectedAccessories = [];
+        document.querySelectorAll('#accessoriesList input:checked').forEach(cb => selectedAccessories.push(cb.value));
+        showContacts();
+        pageAcc.classList.remove('active');
+        pageContacts.classList.add('active');
+    };
+    document.getElementById('backToParams').onclick = () => {
+        pageAcc.classList.remove('active');
+        page2.classList.add('active');
+    };
+
+    // КНОПКИ НА СТР. КОНТАКТОВ
+    document.getElementById('copyBtn').onclick = () => {
+        if(!document.getElementById('userName').value.trim() || !document.getElementById('userEmail').value.trim() || !document.getElementById('userCity').value.trim()) {
+            showMessage('❌ Заполните имя, email и город', true);
             return;
         }
-        sendDataToAllChannels({
-            equipment: currentEquipment,
-            params: currentParams,
-            accessories: selectedAccessories,
-            contacts: {
-                name: name,
-                email: email,
-                city: city,
-                phone: document.getElementById('contactPhone')?.value || '',
-                comment: document.getElementById('contactComment')?.value || ''
-            }
-        });
-    });
-    
-    document.getElementById('backToPrevFromContacts').addEventListener('click', () => {
-        if (selectedAccessories.length > 0) {
-            pageContacts.classList.remove('active-page');
-            pageAccessories.classList.add('active-page');
-        } else {
-            pageContacts.classList.remove('active-page');
-            page2.classList.add('active-page');
+        navigator.clipboard.writeText(getOrderText());
+        showMessage('✅ Заявка скопирована! Отправьте её в Telegram или по почте.');
+    };
+    document.getElementById('emailBtn').onclick = () => {
+        if(!document.getElementById('userName').value.trim() || !document.getElementById('userEmail').value.trim() || !document.getElementById('userCity').value.trim()) {
+            showMessage('❌ Заполните имя, email и город', true);
+            return;
         }
-        window.scrollTo(0,0);
-    });
-    
-    // ---------- ПЕРЕХОДЫ ----------
-    document.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', (e) => {
-            e.stopPropagation();
-            currentEquipment = card.getAttribute('data-equipment');
-            document.getElementById('selectedEquipmentDisplay').innerHTML = `🔧 ${currentEquipment}`;
-            if (currentEquipment === "Принадлежности к вентиляции") {
-                // отдельный режим для принадлежностей
-                selectedAccessories = [];
-                currentParams = {};
-                renderAccessoriesPage();
-                page1.classList.remove('active-page');
-                pageAccessories.classList.add('active-page');
-            } else {
-                renderStep2();
-                page1.classList.remove('active-page');
-                page2.classList.add('active-page');
-            }
-            window.scrollTo(0,0);
-        });
-    });
-    
-    document.getElementById('backToTypeBtn').addEventListener('click', () => {
-        page2.classList.remove('active-page');
-        page1.classList.add('active-page');
-    });
+        window.location.href = getMailLink();
+        showMessage('✉️ Открывается почтовый клиент');
+    };
+    document.getElementById('backFromContacts').onclick = () => {
+        if(selectedAccessories.length > 0) {
+            pageContacts.classList.remove('active');
+            pageAcc.classList.add('active');
+        } else {
+            pageContacts.classList.remove('active');
+            page2.classList.add('active');
+        }
+    };
 </script>
 </body>
 </html>
