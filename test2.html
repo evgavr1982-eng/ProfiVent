@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Тест программы подбора вентиляции</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #eef2f5 0%, #e2e8f0 100%);
+            font-family: 'Segoe UI', system-ui, 'Roboto', sans-serif;
+            padding: 24px 16px 60px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 28px;
+            text-align: center;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .subhead {
+            text-align: center;
+            color: #5b6e8c;
+            margin-bottom: 32px;
+            font-size: 15px;
+        }
+
+        .question-card {
+            background: white;
+            border-radius: 28px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        .question-text {
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: #0f172a;
+        }
+
+        .options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .option-btn {
+            background: #f1f5f9;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .option-btn.selected {
+            background: #f97316;
+            color: white;
+        }
+
+        .free-text {
+            width: 100%;
+            padding: 12px;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 20px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            margin-top: 8px;
+        }
+
+        .free-text:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+
+        .rating-stars {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .star {
+            font-size: 28px;
+            cursor: pointer;
+            color: #cbd5e1;
+            transition: 0.1s;
+        }
+
+        .star.active {
+            color: #f97316;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-area {
+            background: #f1f5f9;
+            border-radius: 24px;
+            padding: 20px;
+            margin-top: 24px;
+            display: none;
+        }
+
+        .result-area.show {
+            display: block;
+        }
+
+        .result-text {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            font-family: monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            margin-bottom: 12px;
+            border: 1px solid #e2e8f0;
+            max-height: 400px;
+            overflow: auto;
+        }
+
+        .copy-btn {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 40px;
+            font-size: 14px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🧪 Тест программы подбора вентиляции</h1>
+    <div class="subhead">Помогите сделать её лучше! Это займёт 2 минуты.</div>
+
+    <div id="questionsContainer"></div>
+
+    <button id="submitBtn" class="btn-submit">📨 Собрать ответы</button>
+
+    <div id="resultArea" class="result-area">
+        <div id="resultText" class="result-text"></div>
+        <button id="copyResultBtn" class="copy-btn">📋 Скопировать ответы</button>
+    </div>
+
+    <footer>Спасибо! 🙌</footer>
+</div>
+
+<script>
+    // СОКРАЩЁННЫЕ ВОПРОСЫ (12 самых важных) — ИСПРАВЛЕНО
+    const questions = [
+        {
+            id: "q1",
+            text: "1. Понятно ли, как пользоваться программой?",
+            type: "choice",
+            options: ["Да, всё понятно", "Не совсем", "Нет, сложно"]
+        },
+        {
+            id: "q2",
+            text: "2. Нравится ли внешний вид?",
+            type: "choice",
+            options: ["Да", "Нормально", "Нет"]
+        },
+        {
+            id: "q3",
+            text: "3. Были ли ошибки, зависания или что-то работало не так?",
+            type: "choice",
+            options: ["Нет, всё отлично", "Были мелкие проблемы", "Да, серьёзные ошибки"]
+        },
+        {
+            id: "q4",
+            text: "4. Удобно ли вводить параметры (рабочая точка / помещение)?",
+            type: "choice",
+            options: ["Да, удобно", "Так себе", "Неудобно"]
+        },
+        {
+            id: "q5",
+            text: "5. Всё ли понятно с выбором принадлежностей (категории, подсказки)?",
+            type: "choice",
+            options: ["Да", "Не совсем", "Нет"]
+        },
+        {
+            id: "q6",
+            text: "6. Сработало ли копирование заявки и отправка через «Поделиться»?",
+            type: "choice",
+            options: ["Да", "Только копирование", "Нет, ничего не сработало"]
+        },
+        {
+            id: "q7",
+            text: "7. На каком устройстве тестировали?",
+            type: "choice",
+            options: ["iPhone", "Android", "ПК (Windows/Mac)", "Планшет"]
+        },
+        {
+            id: "q8",
+            text: "8. Оцените удобство программы от 1 до 10",
+            type: "rating",
+            max: 10
+        },
+        {
+            id: "q9",
+            text: "9. Что понравилось больше всего?",
+            type: "text",
+            placeholder: "Напишите кратко..."
+        },
+        {
+            id: "q10",
+            text: "10. Что НЕ понравилось или сбивало с толку?",
+            type: "text",
+            placeholder: "Напишите или «ничего»..."
+        },
+        {
+            id: "q11",
+            text: "11. Что бы вы добавили или изменили?",
+            type: "text",
+            placeholder: "Ваши идеи..."
+        },
+        {
+            id: "q12",
+            text: "12. Порекомендовали бы знакомым?",
+            type: "choice",
+            options: ["Да", "Возможно", "Нет"]
+        }
+    ];
+
+    let answers = {};
+
+    function renderQuestions() {
+        const container = document.getElementById('questionsContainer');
+        if (!container) return;
+        container.innerHTML = '';
+
+        questions.forEach(q => {
+            const card = document.createElement('div');
+            card.className = 'question-card';
+            card.id = `card-${q.id}`;
+
+            const questionText = document.createElement('div');
+            questionText.className = 'question-text';
+            questionText.textContent = q.text;
+            card.appendChild(questionText);
+
+            if (q.type === 'choice') {
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'options';
+                q.options.forEach(opt => {
+                    const btn = document.createElement('button');
+                    btn.className = 'option-btn';
+                    btn.textContent = opt;
+                    btn.onclick = () => {
+                        document.querySelectorAll(`#card-${q.id} .option-btn`).forEach(b => b.classList.remove('selected'));
+                        btn.classList.add('selected');
+                        answers[q.id] = opt;
+                    };
+                    optionsDiv.appendChild(btn);
+                });
+                card.appendChild(optionsDiv);
+            } 
+            else if (q.type === 'text') {
+                const textarea = document.createElement('textarea');
+                textarea.className = 'free-text';
+                textarea.rows = 2;
+                textarea.placeholder = q.placeholder || 'Ваш ответ...';
+                textarea.oninput = (e) => { answers[q.id] = e.target.value; };
+                card.appendChild(textarea);
+            }
+            else if (q.type === 'rating') {
+                const starsDiv = document.createElement('div');
+                starsDiv.className = 'rating-stars';
+                for (let i = 1; i <= q.max; i++) {
+                    const star = document.createElement('span');
+                    star.className = 'star';
+                    star.textContent = '★';
+                    star.onclick = () => {
+                        document.querySelectorAll(`#card-${q.id} .star`).forEach((s, idx) => {
+                            if (idx < i) s.classList.add('active');
+                            else s.classList.remove('active');
+                        });
+                        answers[q.id] = i;
+                    };
+                    starsDiv.appendChild(star);
+                }
+                card.appendChild(starsDiv);
+            }
+
+            container.appendChild(card);
+        });
+    }
+
+    function buildResultText() {
+        let result = '🧪 РЕЗУЛЬТАТЫ ТЕСТА\n';
+        result += `📅 ${new Date().toLocaleString()}\n`;
+        result += '='.repeat(50) + '\n\n';
+
+        for (const q of questions) {
+            const answer = answers[q.id];
+            const answerText = answer !== undefined ? answer : '❌ не отвечено';
+            result += `${q.text}\n👉 ${answerText}\n\n`;
+        }
+
+        result += '='.repeat(50) + '\n🙏 Спасибо за обратную связь!\n';
+        return result;
+    }
+
+    function collectAndShow() {
+        const missing = questions.filter(q => answers[q.id] === undefined);
+        if (missing.length > 0) {
+            if (!confirm(`Вы не ответили на ${missing.length} вопрос(ов). Всё равно отправить?`)) {
+                return;
+            }
+        }
+
+        const resultText = buildResultText();
+        const resultDiv = document.getElementById('resultText');
+        const resultArea = document.getElementById('resultArea');
+        if (resultDiv && resultArea) {
+            resultDiv.textContent = resultText;
+            resultArea.classList.add('show');
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+    }
+
+    async function copyResult() {
+        const text = document.getElementById('resultText')?.textContent;
+        if (!text) return;
+        try {
+            await navigator.clipboard.writeText(text);
+            const btn = document.getElementById('copyResultBtn');
+            if (btn) {
+                const original = btn.textContent;
+                btn.textContent = '✅ Скопировано!';
+                setTimeout(() => { btn.textContent = original; }, 2000);
+            }
+        } catch (err) {
+            alert('Не удалось скопировать');
+        }
+    }
+
+    // Запуск
+    renderQuestions();
+    const submitBtn = document.getElementById('submitBtn');
+    const copyBtn = document.getElementById('copyResultBtn');
+    if (submitBtn) submitBtn.addEventListener('click', collectAndShow);
+    if (copyBtn) copyBtn.addEventListener('click', copyResult);
+</script>
+</body>
+</html>
