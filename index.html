@@ -333,6 +333,8 @@
             max-height: 600px;
             padding: 0 18px 18px 18px;
         }
+        
+        /* Исправленные подсказки — появляются справа */
         .tooltip-item {
             position: relative;
             display: inline-block;
@@ -348,10 +350,10 @@
             border-radius: 12px;
             padding: 8px 12px;
             position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            transform: translateX(-50%);
+            z-index: 100;
+            top: 50%;
+            left: 100%;
+            transform: translateY(-50%) translateX(8px);
             opacity: 0;
             transition: opacity 0.2s;
             font-size: 13px;
@@ -360,6 +362,17 @@
             white-space: normal;
             word-wrap: break-word;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        /* Стрелочка для подсказки слева */
+        .tooltip-item .tooltip-text::before {
+            content: '';
+            position: absolute;
+            left: -8px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 6px;
+            border-style: solid;
+            border-color: transparent #1e293b transparent transparent;
         }
         .tooltip-item:hover .tooltip-text {
             visibility: visible;
@@ -542,7 +555,8 @@
             .grid-3 { gap: 8px; }
             .form-card { padding: 20px; }
             .floating-contacts { font-size: 12px; gap: 12px; padding: 10px 12px; }
-            .tooltip-item .tooltip-text { width: 200px; font-size: 11px; }
+            .tooltip-item .tooltip-text { width: 200px; font-size: 11px; left: auto; right: 0; transform: translateY(-50%) translateX(0); }
+            .tooltip-item .tooltip-text::before { display: none; }
         }
     </style>
 </head>
@@ -733,17 +747,7 @@
     ];
 
     // ==================== ФУНКЦИИ ====================
-    function getHoodsSummary() {
-        if (!currentParams.hasHoods || !hoodsData.length) return '';
-        let text = `\n🍽️ Вытяжные зонты (${currentParams.hoodsCount || hoodsData.length} шт.):`;
-        hoodsData.forEach((h, i) => {
-            if (h.w || h.l || h.h) {
-                text += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
-            }
-        });
-        return text;
-    }
-
+    // Генерация полей для зонтов (размеры в метрах)
     function generateHoods(count) {
         const container = document.getElementById('hoodsContainer');
         if (!container) return;
@@ -756,9 +760,9 @@
             div.innerHTML = `
                 <div class="hood-title">📐 Зонт ${i + 1}</div>
                 <div class="grid-3">
-                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" class="hood-w-${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div>
-                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" class="hood-l-${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div>
-                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" class="hood-h-${i}" placeholder="мм"><span class="unit-badge">мм</span></div></div>
+                    <div class="input-field"><label>Ширина</label><div class="input-wrapper"><input type="number" step="0.1" class="hood-w-${i}" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Длина</label><div class="input-wrapper"><input type="number" step="0.1" class="hood-l-${i}" placeholder="м"><span class="unit-badge">м</span></div></div>
+                    <div class="input-field"><label>Высота</label><div class="input-wrapper"><input type="number" step="0.1" class="hood-h-${i}" placeholder="м"><span class="unit-badge">м</span></div></div>
                 </div>
             `;
             container.appendChild(div);
@@ -796,7 +800,7 @@
             if (nonEmptyHoods.length) {
                 summaryText += `\n🍽️ <strong>Вытяжные зонты:</strong> ${nonEmptyHoods.length} шт.`;
                 nonEmptyHoods.forEach((h, i) => {
-                    summaryText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
+                    summaryText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} м`;
                 });
             } else if (document.getElementById('hoodsCount')?.value > 0) {
                 summaryText += `\n🍽️ <strong>Вытяжные зонты:</strong> ${document.getElementById('hoodsCount').value} шт. (размеры не указаны)`;
@@ -960,7 +964,7 @@
         if (currentParams.hasHoods && currentParams.hoods && currentParams.hoods.length) {
             hoodsText = `\n🍽️ Зонты (${currentParams.hoodsCount || currentParams.hoods.length} шт.):`;
             currentParams.hoods.forEach((h, i) => {
-                hoodsText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
+                hoodsText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} м`;
             });
         } else if (currentParams.hasHoods && currentParams.hoodsCount > 0 && (!currentParams.hoods || !currentParams.hoods.length)) {
             hoodsText = `\n🍽️ Зонты: ${currentParams.hoodsCount} шт. (размеры не указаны)`;
