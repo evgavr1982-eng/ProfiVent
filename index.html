@@ -461,10 +461,39 @@
         .copy-message.show {
             display: block;
         }
-        .copy-message a {
+        .share-btn {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 60px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 12px 0;
+            width: 100%;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .share-btn:hover {
+            background: #0f172a;
+            transform: translateY(-2px);
+        }
+        .contacts-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .contacts-row a {
             color: #f97316;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 500;
+            font-size: 14px;
         }
         .copy-instruction {
             font-size: 13px;
@@ -539,7 +568,6 @@
                 </div>
             </div>
 
-            <!-- Живая сводка параметров -->
             <div id="liveSummary" class="summary-block" style="display: none;"></div>
 
             <div class="double-buttons">
@@ -829,20 +857,49 @@ ${paramsText}${hoodsText}
   • Комментарий: ${comment}`;
     }
 
+    async function handleShare() {
+        const text = getOrderText();
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Заявка на подбор вентиляции',
+                    text: text
+                });
+            } catch (e) {
+                if (e.name !== 'AbortError') {
+                    alert('Не удалось открыть окно поделиться. Скопируйте заявку вручную.');
+                }
+            }
+        } else {
+            // На компьютере — копируем в буфер
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('✅ Заявка скопирована в буфер! Отправьте её удобным способом.');
+            } catch (err) {
+                alert('❌ Не удалось скопировать. Скопируйте текст вручную.');
+            }
+        }
+    }
+
     function showCopyMessage() {
         const msgDiv = document.getElementById('copyMessage');
         if (msgDiv) {
             msgDiv.innerHTML = `
-                ✅ <strong>Заявка скопирована!</strong><br><br>
-                📨 <a href="https://t.me/MIR_OVIK" target="_blank">Telegram</a> &nbsp;|&nbsp;
-                ✉️ <a href="mailto:mirovik@mir-ovik.ru">Email</a> &nbsp;|&nbsp;
-                🔗 <a href="https://max.ru/u/f9LHodD0cOLP8CX4rPVjaENws-ws6N3fFI9na-5_-cGhHAmCQ-nQ9ZPkneY" target="_blank">Max</a>
+                ✅ <strong>Заявка скопирована!</strong>
+                <button id="shareNowBtn" class="share-btn">📤 Поделиться</button>
+                <div class="contacts-row">
+                    <a href="https://t.me/MIR_OVIK" target="_blank">📨 Telegram</a>
+                    <a href="mailto:mirovik@mir-ovik.ru">✉️ Email</a>
+                    <a href="https://max.ru/u/f9LHodD0cOLP8CX4rPVjaENws-ws6N3fFI9na-5_-cGhHAmCQ-nQ9ZPkneY" target="_blank">🔗 Max</a>
+                </div>
                 <div class="copy-instruction">
-                    👇 Нажмите на нужный способ отправки и вставьте заявку (Ctrl+V)
+                    👇 Нажмите «Поделиться» — выберите любое приложение (Telegram, WhatsApp, почту...)
                 </div>
             `;
             msgDiv.classList.add('show');
-            setTimeout(() => msgDiv.classList.remove('show'), 10000);
+            const shareBtn = document.getElementById('shareNowBtn');
+            if (shareBtn) shareBtn.addEventListener('click', handleShare);
+            setTimeout(() => msgDiv.classList.remove('show'), 30000);
         }
     }
 
