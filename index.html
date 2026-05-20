@@ -292,6 +292,7 @@
             padding: 8px;
         }
 
+        /* Принадлежности */
         .accessory-cat {
             background: white;
             border-radius: 24px;
@@ -309,6 +310,7 @@
             font-weight: 600;
             background: #fafcff;
             transition: 0.2s;
+            font-size: 16px;
         }
         .accessory-header:hover {
             background: #fff7ed;
@@ -328,8 +330,40 @@
             padding: 0 18px;
         }
         .accessory-cat.open .accessory-items {
-            max-height: 360px;
+            max-height: 600px;
             padding: 0 18px 18px 18px;
+        }
+        .tooltip-item {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            border-bottom: 1px dashed #f97316;
+        }
+        .tooltip-item .tooltip-text {
+            visibility: hidden;
+            width: 260px;
+            background-color: #1e293b;
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 8px 12px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 13px;
+            font-weight: normal;
+            pointer-events: none;
+            white-space: normal;
+            word-wrap: break-word;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .tooltip-item:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
         }
         .accessory-items label {
             display: flex;
@@ -508,6 +542,7 @@
             .grid-3 { gap: 8px; }
             .form-card { padding: 20px; }
             .floating-contacts { font-size: 12px; gap: 12px; padding: 10px 12px; }
+            .tooltip-item .tooltip-text { width: 200px; font-size: 11px; }
         }
     </style>
 </head>
@@ -632,15 +667,69 @@
     const pageAcc = document.getElementById('pageAcc');
     const pageContacts = document.getElementById('pageContacts');
 
-    // КАТЕГОРИИ ПРИНАДЛЕЖНОСТЕЙ
+    // НОВАЯ СТРУКТУРА КАТЕГОРИЙ С ОПИСАНИЯМИ
     const categories = [
-        { name: "📦 Воздуховоды и элементы монтажа", items: ["воздуховоды", "фасонные изделия", "гибкие вставки", "хомуты", "кронштейны", "уплотнители"] },
-        { name: "🌬️ Устройства распределения воздуха", items: ["решётки", "диффузоры", "анемостаты", "клапаны"] },
-        { name: "🧹 Очистка и подготовка воздуха", items: ["фильтры", "рекуператоры", "увлажнители", "ионизаторы"] },
-        { name: "🔥 Нагревательные и охлаждающие", items: ["калориферы", "охладители"] },
-        { name: "🔇 Шумо- и виброзащита", items: ["шумоглушители", "виброизоляторы"] },
-        { name: "📊 Управление и контроль", items: ["датчики", "контроллеры", "приводы", "щиты"] },
-        { name: "🛠️ Вспомогательные элементы", items: ["дефлекторы", "зонты", "люки", "дренаж"] }
+        { 
+            name: "⭐ Рекомендуемые опции (аксессуары к вентиляторам)",
+            items: [
+                { name: "гибкие вставки", desc: "Компенсируют вибрацию и погрешности монтажа, снижают шум" },
+                { name: "виброизоляторы", desc: "Уменьшают передачу вибрации от вентилятора на конструкции" },
+                { name: "частотный регулятор", desc: "Плавный пуск и остановка двигателя, точное регулирование технологических параметров, экономит электроэнергию и снижает пусковые токи" }
+            ]
+        },
+        { 
+            name: "📦 Воздуховоды и элементы монтажа",
+            items: [
+                { name: "воздуховоды", desc: "Круглые или прямоугольные каналы для транспортировки воздуха" },
+                { name: "фасонные изделия", desc: "Отводы, переходы, тройники, ниппеля — для соединения воздуховодов" }
+            ]
+        },
+        { 
+            name: "🌬️ Устройства распределения воздуха",
+            items: [
+                { name: "решётки", desc: "Для забора или выброса воздуха, регулировка потока вручную" },
+                { name: "диффузоры", desc: "Равномерно распределяют воздух по помещению" },
+                { name: "анемостаты", desc: "Для приточной вентиляции, создают веерную струю воздуха" },
+                { name: "клапаны", desc: "Перекрывают или регулируют поток воздуха в системе" }
+            ]
+        },
+        { 
+            name: "🧹 Очистка и подготовка воздуха",
+            items: [
+                { name: "фильтры", desc: "Задерживают пыль, жир, запахи — защищают вентилятор и помещение" }
+            ]
+        },
+        { 
+            name: "🔥 Нагревательные и охлаждающие",
+            items: [
+                { name: "калорифер электрический", desc: "Нагревает воздух с помощью ТЭНов, прост в подключении" },
+                { name: "калорифер водяной", desc: "Нагревает воздух от системы отопления, экономичнее электрического" },
+                { name: "охладители", desc: "Охлаждают приточный воздух для комфорта в тёплое время года" }
+            ]
+        },
+        { 
+            name: "🔇 Шумоглушители",
+            items: [
+                { name: "шумоглушители", desc: "Снижают аэродинамический шум от вентилятора в воздуховодах" }
+            ]
+        },
+        { 
+            name: "📊 Управление и контроль",
+            items: [
+                { name: "частотные / симисторные регуляторы", desc: "Управляют скоростью вращения вентилятора вручную или автоматически" },
+                { name: "датчики", desc: "Отслеживают температуру, давление, CO₂ — для автоматики" },
+                { name: "приводы", desc: "Электроприводы для автоматического открытия/закрытия клапанов" },
+                { name: "щиты", desc: "Готовые шкафы управления для подключения и автоматики" }
+            ]
+        },
+        { 
+            name: "🛠️ Вспомогательные элементы",
+            items: [
+                { name: "дефлекторы", desc: "Устанавливаются на крыше, улучшают вытяжку за счёт ветра" },
+                { name: "зонты", desc: "Вытяжные зонты над плитами или оборудованием — собирают воздух" },
+                { name: "люки", desc: "Для доступа в воздуховод при обслуживании и чистке" }
+            ]
+        }
     ];
 
     // ==================== ФУНКЦИИ ====================
@@ -702,7 +791,6 @@
             }
         }
         
-        // Добавляем информацию о зонтах, если они есть
         if (currentEquipment === "Вентиляция для Кухни" && document.getElementById('hasHoods')?.checked && hoodsData.length) {
             const nonEmptyHoods = hoodsData.filter(h => h.w || h.l || h.h);
             if (nonEmptyHoods.length) {
@@ -814,13 +902,24 @@
         categories.forEach(cat => {
             const div = document.createElement('div');
             div.className = 'accessory-cat';
+            let itemsHtml = '';
+            cat.items.forEach(item => {
+                itemsHtml += `
+                    <label>
+                        <input type="checkbox" value="${item.name}">
+                        <span class="tooltip-item">${item.name}
+                            <span class="tooltip-text">${item.desc}</span>
+                        </span>
+                    </label>
+                `;
+            });
             div.innerHTML = `
                 <div class="accessory-header">
                     <span>${cat.name}</span>
                     <span class="arrow">▶</span>
                 </div>
                 <div class="accessory-items">
-                    ${cat.items.map(item => `<label><input type="checkbox" value="${item}"> ${item}</label>`).join('')}
+                    ${itemsHtml}
                 </div>
             `;
             const header = div.querySelector('.accessory-header');
