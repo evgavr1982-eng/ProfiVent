@@ -644,6 +644,17 @@
     ];
 
     // ==================== ФУНКЦИИ ====================
+    function getHoodsSummary() {
+        if (!currentParams.hasHoods || !hoodsData.length) return '';
+        let text = `\n🍽️ Вытяжные зонты (${currentParams.hoodsCount || hoodsData.length} шт.):`;
+        hoodsData.forEach((h, i) => {
+            if (h.w || h.l || h.h) {
+                text += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
+            }
+        });
+        return text;
+    }
+
     function generateHoods(count) {
         const container = document.getElementById('hoodsContainer');
         if (!container) return;
@@ -690,10 +701,24 @@
                 summaryText = `📋 <strong>Ваш запрос:</strong> Вам нужен вентилятор для помещения <strong>${w || '?'}×${l || '?'}×${h || '?'} м</strong>, расстояние от вентилятора <strong>${d || '?'} м</strong>.`;
             }
         }
+        
+        // Добавляем информацию о зонтах, если они есть
+        if (currentEquipment === "Вентиляция для Кухни" && document.getElementById('hasHoods')?.checked && hoodsData.length) {
+            const nonEmptyHoods = hoodsData.filter(h => h.w || h.l || h.h);
+            if (nonEmptyHoods.length) {
+                summaryText += `\n🍽️ <strong>Вытяжные зонты:</strong> ${nonEmptyHoods.length} шт.`;
+                nonEmptyHoods.forEach((h, i) => {
+                    summaryText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
+                });
+            } else if (document.getElementById('hoodsCount')?.value > 0) {
+                summaryText += `\n🍽️ <strong>Вытяжные зонты:</strong> ${document.getElementById('hoodsCount').value} шт. (размеры не указаны)`;
+            }
+        }
+        
         const summaryDiv = document.getElementById('liveSummary');
         if (summaryDiv) {
             if (summaryText) {
-                summaryDiv.innerHTML = summaryText;
+                summaryDiv.innerHTML = summaryText.replace(/\n/g, '<br>');
                 summaryDiv.style.display = 'block';
             } else {
                 summaryDiv.style.display = 'none';
@@ -834,10 +859,12 @@
         
         let hoodsText = '';
         if (currentParams.hasHoods && currentParams.hoods && currentParams.hoods.length) {
-            hoodsText = `\n🍽️ Зонты (${currentParams.hoodsCount || 0} шт.):`;
+            hoodsText = `\n🍽️ Зонты (${currentParams.hoodsCount || currentParams.hoods.length} шт.):`;
             currentParams.hoods.forEach((h, i) => {
                 hoodsText += `\n   Зонт ${i+1}: ${h.w || '?'}×${h.l || '?'}×${h.h || '?'} мм`;
             });
+        } else if (currentParams.hasHoods && currentParams.hoodsCount > 0 && (!currentParams.hoods || !currentParams.hoods.length)) {
+            hoodsText = `\n🍽️ Зонты: ${currentParams.hoodsCount} шт. (размеры не указаны)`;
         }
         
         return `🔔 НОВАЯ ЗАЯВКА НА ВЕНТИЛЯЦИЮ
@@ -871,7 +898,6 @@ ${paramsText}${hoodsText}
                 }
             }
         } else {
-            // На компьютере — копируем в буфер
             try {
                 await navigator.clipboard.writeText(text);
                 alert('✅ Заявка скопирована в буфер! Отправьте её удобным способом.');
