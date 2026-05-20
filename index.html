@@ -14,7 +14,7 @@
         body {
             background: linear-gradient(135deg, #eef2f5 0%, #e2e8f0 100%);
             font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-            padding: 24px 16px 100px; /* увеличен нижний отступ, чтобы контакты не перекрывали контент */
+            padding: 24px 16px 100px;
             min-height: 100vh;
         }
 
@@ -23,7 +23,6 @@
             margin: 0 auto;
         }
 
-        /* Анимации страниц */
         .page {
             display: none;
             animation: fadeIn 0.35s ease-out;
@@ -38,7 +37,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Прогресс-бар */
         .step-track {
             margin-bottom: 28px;
         }
@@ -67,7 +65,6 @@
             font-weight: 600;
         }
 
-        /* Карточки выбора */
         h1 {
             font-size: 32px;
             font-weight: 700;
@@ -141,7 +138,6 @@
             transform: scale(0.97);
         }
 
-        /* Формы */
         .form-card {
             background: rgba(255,255,255,0.96);
             backdrop-filter: blur(4px);
@@ -296,7 +292,6 @@
             padding: 8px;
         }
 
-        /* Принадлежности */
         .accessory-cat {
             background: white;
             border-radius: 24px;
@@ -351,7 +346,6 @@
             accent-color: #f97316;
         }
 
-        /* Зонты */
         .checkbox-label {
             display: flex;
             align-items: center;
@@ -398,7 +392,25 @@
             font-size: 14px;
         }
 
-        /* Плавающая контактная панель */
+        .summary-block {
+            background: #fff7ed;
+            border-left: 4px solid #f97316;
+            padding: 16px;
+            border-radius: 20px;
+            margin: 20px 0;
+            font-size: 15px;
+        }
+        .summary-block strong {
+            color: #f97316;
+        }
+
+        .hint-text {
+            font-size: 13px;
+            color: #6c7a91;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
         .floating-contacts {
             position: fixed;
             bottom: 0;
@@ -435,7 +447,6 @@
             gap: 6px;
         }
 
-        /* Сообщение об успешном копировании */
         .copy-message {
             background: #d1fae5;
             color: #065f46;
@@ -462,6 +473,7 @@
             border-top: 1px solid rgba(0,0,0,0.1);
             color: #334155;
         }
+
         @media (max-width: 560px) {
             .double-buttons { flex-direction: column; gap: 10px; }
             .grid-3 { gap: 8px; }
@@ -527,6 +539,9 @@
                 </div>
             </div>
 
+            <!-- Живая сводка параметров -->
+            <div id="liveSummary" class="summary-block" style="display: none;"></div>
+
             <div class="double-buttons">
                 <button id="withAccessories" class="btn-next">➕ Добавить комплектующие</button>
                 <button id="withoutAccessories" class="btn-secondary">➡️ Только вентилятор</button>
@@ -558,7 +573,9 @@
             <div class="input-field"><label><span style="color:#f97316;">*</span> Электронная почта</label><div class="input-wrapper"><input type="email" id="userEmail" placeholder="ivan@example.com"></div></div>
             <div class="input-field"><label><span style="color:#f97316;">*</span> Город</label><div class="input-wrapper"><input type="text" id="userCity" placeholder="Москва"></div></div>
             <div class="input-field"><label>Телефон (необязательно)</label><div class="input-wrapper"><input type="text" id="userPhone" placeholder="+7 XXX XXX XX XX"></div></div>
-            <div class="input-field"><label>Комментарий</label><div class="input-wrapper"><textarea id="userComment" rows="3" placeholder="Дополнительная информация..."></textarea></div></div>
+            <div class="input-field"><label>Комментарий</label><div class="input-wrapper"><textarea id="userComment" rows="3" placeholder="Дополнительная информация..."></textarea></div>
+            <div class="hint-text">💡 Напишите всё, что считаете важным дополнить к вашему запросу. Любые детали помогут нам подобрать идеальное решение.</div>
+            </div>
             <hr>
             <button id="copyBtn" class="btn-next">📋 Скопировать заявку</button>
             <div id="copyMessage" class="copy-message"></div>
@@ -567,7 +584,7 @@
     </div>
 </div>
 
-<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ КОНТАКТОВ (ВИДНА НА ВСЕХ СТРАНИЦАХ) -->
+<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ КОНТАКТОВ -->
 <div class="floating-contacts">
     <span>📞 +7 993 205 05 25</span>
     <span>✉️ mirovik@mir-ovik.ru</span>
@@ -576,14 +593,12 @@
 </div>
 
 <script>
-    // ==================== ВЕСЬ JAVASCRIPT КОД ====================
-    // ДАННЫЕ
+    // ==================== ДАННЫЕ ====================
     let currentEquipment = "";
     let currentParams = {};
     let selectedAccessories = [];
     let hoodsData = [];
 
-    // ЭЛЕМЕНТЫ СТРАНИЦ
     const page1 = document.getElementById('page1');
     const page2 = document.getElementById('page2');
     const pageAcc = document.getElementById('pageAcc');
@@ -600,7 +615,7 @@
         { name: "🛠️ Вспомогательные элементы", items: ["дефлекторы", "зонты", "люки", "дренаж"] }
     ];
 
-    // ГЕНЕРАЦИЯ ПОЛЕЙ ДЛЯ ЗОНТОВ
+    // ==================== ФУНКЦИИ ====================
     function generateHoods(count) {
         const container = document.getElementById('hoodsContainer');
         if (!container) return;
@@ -622,13 +637,50 @@
             const wInput = div.querySelector(`.hood-w-${i}`);
             const lInput = div.querySelector(`.hood-l-${i}`);
             const hInput = div.querySelector(`.hood-h-${i}`);
-            if (wInput) wInput.addEventListener('input', (e) => { hoodsData[i].w = e.target.value; });
-            if (lInput) lInput.addEventListener('input', (e) => { hoodsData[i].l = e.target.value; });
-            if (hInput) hInput.addEventListener('input', (e) => { hoodsData[i].h = e.target.value; });
+            if (wInput) wInput.addEventListener('input', (e) => { hoodsData[i].w = e.target.value; updateSummary(); });
+            if (lInput) lInput.addEventListener('input', (e) => { hoodsData[i].l = e.target.value; updateSummary(); });
+            if (hInput) hInput.addEventListener('input', (e) => { hoodsData[i].h = e.target.value; updateSummary(); });
+        }
+        updateSummary();
+    }
+
+    function updateSummary() {
+        const isWork = document.getElementById('workPanel')?.classList.contains('show');
+        let summaryText = '';
+        if (isWork) {
+            const cap = document.getElementById('capacity')?.value;
+            const pres = document.getElementById('pressure')?.value;
+            if (cap || pres) {
+                summaryText = `📋 <strong>Ваш запрос:</strong> Вам нужен вентилятор с рабочей точкой <strong>${cap || '?'} м³/ч</strong> и давлением <strong>${pres || '?'} Па</strong>.`;
+            }
+        } else {
+            const w = document.getElementById('roomW')?.value;
+            const l = document.getElementById('roomL')?.value;
+            const h = document.getElementById('roomH')?.value;
+            const d = document.getElementById('distance')?.value;
+            if (w || l || h) {
+                summaryText = `📋 <strong>Ваш запрос:</strong> Вам нужен вентилятор для помещения <strong>${w || '?'}×${l || '?'}×${h || '?'} м</strong>, расстояние от вентилятора <strong>${d || '?'} м</strong>.`;
+            }
+        }
+        const summaryDiv = document.getElementById('liveSummary');
+        if (summaryDiv) {
+            if (summaryText) {
+                summaryDiv.innerHTML = summaryText;
+                summaryDiv.style.display = 'block';
+            } else {
+                summaryDiv.style.display = 'none';
+            }
         }
     }
 
-    // ОТРИСОВКА СТРАНИЦЫ 2
+    function attachInputListeners() {
+        const inputs = ['capacity', 'pressure', 'roomW', 'roomL', 'roomH', 'distance'];
+        inputs.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('input', updateSummary);
+        });
+    }
+
     function renderPage2() {
         const selectedTitle = document.getElementById('selectedTitle');
         if (selectedTitle) selectedTitle.innerHTML = `🔧 ${currentEquipment}`;
@@ -656,6 +708,7 @@
                         if (hoodsSection) hoodsSection.classList.remove('show');
                         if (hoodsContainer) hoodsContainer.innerHTML = '';
                         hoodsData = [];
+                        updateSummary();
                     }
                 };
             }
@@ -668,35 +721,29 @@
                 };
             }
         }
+        updateSummary();
+        attachInputListeners();
     }
 
-    // СБОР ПАРАМЕТРОВ СО СТРАНИЦЫ 2
     function collectParams() {
         const workPanel = document.getElementById('workPanel');
         const isWork = workPanel ? workPanel.classList.contains('show') : true;
         let p = {};
         if (isWork) {
-            const capacity = document.getElementById('capacity');
-            const pressure = document.getElementById('pressure');
-            p.capacity = capacity ? capacity.value : '';
-            p.pressure = pressure ? pressure.value : '';
+            p.capacity = document.getElementById('capacity')?.value || '';
+            p.pressure = document.getElementById('pressure')?.value || '';
         } else {
-            const roomW = document.getElementById('roomW');
-            const roomL = document.getElementById('roomL');
-            const roomH = document.getElementById('roomH');
-            const distance = document.getElementById('distance');
-            p.roomW = roomW ? roomW.value : '';
-            p.roomL = roomL ? roomL.value : '';
-            p.roomH = roomH ? roomH.value : '';
-            p.distance = distance ? distance.value : '';
+            p.roomW = document.getElementById('roomW')?.value || '';
+            p.roomL = document.getElementById('roomL')?.value || '';
+            p.roomH = document.getElementById('roomH')?.value || '';
+            p.distance = document.getElementById('distance')?.value || '';
         }
         
         if (currentEquipment === "Вентиляция для Кухни") {
             const hasHoodsCheck = document.getElementById('hasHoods');
             if (hasHoodsCheck && hasHoodsCheck.checked) {
                 p.hasHoods = true;
-                const hoodsCount = document.getElementById('hoodsCount');
-                p.hoodsCount = hoodsCount ? hoodsCount.value : 0;
+                p.hoodsCount = document.getElementById('hoodsCount')?.value || 0;
                 p.hoods = hoodsData.filter(h => h.w || h.l || h.h);
             } else {
                 p.hasHoods = false;
@@ -705,7 +752,6 @@
         return p;
     }
 
-    // ОТРИСОВКА ПРИНАДЛЕЖНОСТЕЙ
     function renderAccessories() {
         const accTitle = document.getElementById('accTitle');
         if (accTitle) accTitle.innerHTML = `🔧 ${currentEquipment}`;
@@ -730,7 +776,6 @@
         });
     }
 
-    // ПОКАЗ СТРАНИЦЫ С КОНТАКТАМИ
     function showContacts() {
         const contactTitle = document.getElementById('contactTitle');
         if (contactTitle) contactTitle.innerHTML = `🔧 ${currentEquipment}`;
@@ -745,19 +790,12 @@
         }
     }
 
-    // ФОРМИРОВАНИЕ ТЕКСТА ЗАЯВКИ ДЛЯ КОПИРОВАНИЯ
     function getOrderText() {
-        const userName = document.getElementById('userName');
-        const userEmail = document.getElementById('userEmail');
-        const userCity = document.getElementById('userCity');
-        const userPhone = document.getElementById('userPhone');
-        const userComment = document.getElementById('userComment');
-        
-        const name = userName ? userName.value.trim() : 'не указано';
-        const email = userEmail ? userEmail.value.trim() : 'не указан';
-        const city = userCity ? userCity.value.trim() : 'не указан';
-        const phone = userPhone ? userPhone.value.trim() : 'не указан';
-        const comment = userComment ? userComment.value.trim() : 'нет';
+        const name = document.getElementById('userName')?.value.trim() || 'не указано';
+        const email = document.getElementById('userEmail')?.value.trim() || 'не указан';
+        const city = document.getElementById('userCity')?.value.trim() || 'не указан';
+        const phone = document.getElementById('userPhone')?.value.trim() || 'не указан';
+        const comment = document.getElementById('userComment')?.value.trim() || 'нет';
         
         let paramsText = '';
         if (currentParams.capacity) {
@@ -804,13 +842,10 @@ ${paramsText}${hoodsText}
                 </div>
             `;
             msgDiv.classList.add('show');
-            setTimeout(() => {
-                msgDiv.classList.remove('show');
-            }, 10000);
+            setTimeout(() => msgDiv.classList.remove('show'), 10000);
         }
     }
 
-    // ИНИЦИАЛИЗАЦИЯ ПЕРЕКЛЮЧЕНИЯ РЕЖИМОВ (РАБОЧАЯ ТОЧКА / ПОМЕЩЕНИЕ)
     function initModeSwitch() {
         const workBtn = document.querySelector('[data-mode="work"]');
         const roomBtn = document.querySelector('[data-mode="room"]');
@@ -830,15 +865,15 @@ ${paramsText}${hoodsText}
                     roomPanel.classList.add('show');
                     workPanel.classList.remove('show');
                 }
+                updateSummary();
+                attachInputListeners();
             };
             workBtn.onclick = () => setMode('work');
             roomBtn.onclick = () => setMode('room');
         }
     }
 
-    // ==================== НАСТРОЙКА ОБРАБОТЧИКОВ ====================
-    
-    // 1. КАРТОЧКИ НА ПЕРВОЙ СТРАНИЦЕ
+    // ==================== ОБРАБОТЧИКИ ====================
     document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('click', () => {
             currentEquipment = card.getAttribute('data-equipment');
@@ -858,98 +893,67 @@ ${paramsText}${hoodsText}
         });
     });
 
-    // 2. КНОПКИ НА СТРАНИЦЕ ПАРАМЕТРОВ
-    const withAccessoriesBtn = document.getElementById('withAccessories');
-    const withoutAccessoriesBtn = document.getElementById('withoutAccessories');
-    const backToMainBtn = document.getElementById('backToMain');
+    document.getElementById('withAccessories')?.addEventListener('click', () => {
+        currentParams = collectParams();
+        renderAccessories();
+        page2.classList.remove('active');
+        pageAcc.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 
-    if (withAccessoriesBtn) {
-        withAccessoriesBtn.addEventListener('click', () => {
-            currentParams = collectParams();
-            renderAccessories();
-            page2.classList.remove('active');
+    document.getElementById('withoutAccessories')?.addEventListener('click', () => {
+        currentParams = collectParams();
+        selectedAccessories = [];
+        showContacts();
+        page2.classList.remove('active');
+        pageContacts.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('backToMain')?.addEventListener('click', () => {
+        page2.classList.remove('active');
+        page1.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('submitAccessories')?.addEventListener('click', () => {
+        selectedAccessories = [];
+        document.querySelectorAll('#accessoriesList input:checked').forEach(cb => selectedAccessories.push(cb.value));
+        showContacts();
+        pageAcc.classList.remove('active');
+        pageContacts.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('backToParams')?.addEventListener('click', () => {
+        pageAcc.classList.remove('active');
+        page2.classList.add('active');
+        initModeSwitch();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    document.getElementById('copyBtn')?.addEventListener('click', () => {
+        const name = document.getElementById('userName');
+        const email = document.getElementById('userEmail');
+        const city = document.getElementById('userCity');
+        if (!name.value.trim() || !email.value.trim() || !city.value.trim()) {
+            alert('❌ Заполните обязательные поля: Имя, Email, Город');
+            return;
+        }
+        navigator.clipboard.writeText(getOrderText()).then(() => showCopyMessage()).catch(() => alert('❌ Не удалось скопировать. Попробуйте вручную.'));
+    });
+
+    document.getElementById('backFromContacts')?.addEventListener('click', () => {
+        if (selectedAccessories.length > 0) {
+            pageContacts.classList.remove('active');
             pageAcc.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    if (withoutAccessoriesBtn) {
-        withoutAccessoriesBtn.addEventListener('click', () => {
-            currentParams = collectParams();
-            selectedAccessories = [];
-            showContacts();
-            page2.classList.remove('active');
-            pageContacts.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    if (backToMainBtn) {
-        backToMainBtn.addEventListener('click', () => {
-            page2.classList.remove('active');
-            page1.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    // 3. КНОПКИ НА СТРАНИЦЕ ПРИНАДЛЕЖНОСТЕЙ
-    const submitAccessoriesBtn = document.getElementById('submitAccessories');
-    const backToParamsBtn = document.getElementById('backToParams');
-
-    if (submitAccessoriesBtn) {
-        submitAccessoriesBtn.addEventListener('click', () => {
-            selectedAccessories = [];
-            const allCheckboxes = document.querySelectorAll('#accessoriesList input:checked');
-            allCheckboxes.forEach(cb => selectedAccessories.push(cb.value));
-            showContacts();
-            pageAcc.classList.remove('active');
-            pageContacts.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    if (backToParamsBtn) {
-        backToParamsBtn.addEventListener('click', () => {
-            pageAcc.classList.remove('active');
+        } else {
+            pageContacts.classList.remove('active');
             page2.classList.add('active');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-
-    // 4. КНОПКИ НА СТРАНИЦЕ КОНТАКТОВ
-    const copyBtn = document.getElementById('copyBtn');
-    const backFromContactsBtn = document.getElementById('backFromContacts');
-
-    if (copyBtn) {
-        copyBtn.addEventListener('click', () => {
-            const name = document.getElementById('userName');
-            const email = document.getElementById('userEmail');
-            const city = document.getElementById('userCity');
-            if (!name.value.trim() || !email.value.trim() || !city.value.trim()) {
-                alert('❌ Заполните обязательные поля: Имя, Email, Город');
-                return;
-            }
-            navigator.clipboard.writeText(getOrderText()).then(() => {
-                showCopyMessage();
-            }).catch(() => {
-                alert('❌ Не удалось скопировать. Попробуйте вручную.');
-            });
-        });
-    }
-
-    if (backFromContactsBtn) {
-        backFromContactsBtn.addEventListener('click', () => {
-            if (selectedAccessories.length > 0) {
-                pageContacts.classList.remove('active');
-                pageAcc.classList.add('active');
-            } else {
-                pageContacts.classList.remove('active');
-                page2.classList.add('active');
-            }
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-    }
-    // ==================== КОНЕЦ JAVASCRIPT КОДА ====================
+            initModeSwitch();
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 </script>
 </body>
 </html>
