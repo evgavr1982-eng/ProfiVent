@@ -14,7 +14,7 @@
         body {
             background: linear-gradient(135deg, #eef2f5 0%, #e2e8f0 100%);
             font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, 'Roboto', sans-serif;
-            padding: 24px 16px 60px;
+            padding: 24px 16px 100px; /* увеличен нижний отступ, чтобы контакты не перекрывали контент */
             min-height: 100vh;
         }
 
@@ -390,40 +390,6 @@
             color: #f97316;
         }
 
-        .telegram-link {
-            display: block;
-            background: linear-gradient(135deg, #0088cc, #006699);
-            color: white;
-            text-align: center;
-            padding: 15px;
-            border-radius: 60px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-top: 16px;
-            transition: 0.2s;
-        }
-        .telegram-link:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 14px rgba(0,136,204,0.3);
-        }
-        hr {
-            margin: 24px 0;
-            border: none;
-            border-top: 2px solid #e2e8f0;
-        }
-        .success-message {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 14px;
-            border-radius: 24px;
-            margin-top: 20px;
-            display: none;
-            font-weight: 500;
-            text-align: center;
-        }
-        .success-message.show {
-            display: block;
-        }
         .selected-items-list {
             background: #f1f5f9;
             padding: 14px 18px;
@@ -431,10 +397,76 @@
             margin: 16px 0;
             font-size: 14px;
         }
+
+        /* Плавающая контактная панель */
+        .floating-contacts {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
+            color: white;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            padding: 12px 16px;
+            font-size: 14px;
+            z-index: 1000;
+            border-top: 1px solid rgba(255,255,255,0.2);
+            font-weight: 500;
+        }
+        .floating-contacts a {
+            color: #f97316;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .floating-contacts a:hover {
+            color: #ffb347;
+            transform: translateY(-2px);
+        }
+        .floating-contacts span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Сообщение об успешном копировании */
+        .copy-message {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 18px;
+            border-radius: 28px;
+            margin-top: 20px;
+            display: none;
+            text-align: center;
+            font-weight: 500;
+            animation: fadeIn 0.3s;
+        }
+        .copy-message.show {
+            display: block;
+        }
+        .copy-message a {
+            color: #f97316;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .copy-instruction {
+            font-size: 13px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            color: #334155;
+        }
         @media (max-width: 560px) {
             .double-buttons { flex-direction: column; gap: 10px; }
             .grid-3 { gap: 8px; }
             .form-card { padding: 20px; }
+            .floating-contacts { font-size: 12px; gap: 12px; padding: 10px 12px; }
         }
     </style>
 </head>
@@ -450,10 +482,9 @@
                 <div class="card-info"><div class="card-title">Вентиляция для малярных работ</div><div class="card-btn">Выбрать →</div></div>
             </div>
             <div class="card" data-equipment="Вентиляция для Кухни">
-   <div class="card-img">🍳</div>
-         <div class="card-info"><div class="card-title">Вентиляция для Кухни</div><div class="card-btn">Выбрать →</div>
-    </div>
-</div>
+                <div class="card-img">🍳</div>
+                <div class="card-info"><div class="card-title">Вентиляция для Кухни</div><div class="card-btn">Выбрать →</div></div>
+            </div>
             <div class="card" data-equipment="Промышленная вентиляция">
                 <div class="card-img">🏭</div>
                 <div class="card-info"><div class="card-title">Промышленная вентиляция</div><div class="card-btn">Выбрать →</div></div>
@@ -530,12 +561,18 @@
             <div class="input-field"><label>Комментарий</label><div class="input-wrapper"><textarea id="userComment" rows="3" placeholder="Дополнительная информация..."></textarea></div></div>
             <hr>
             <button id="copyBtn" class="btn-next">📋 Скопировать заявку</button>
-            <a href="https://t.me/MIR_OVIK" target="_blank" class="telegram-link">📨 Отправить в Telegram →</a>
-            <button id="emailBtn" class="btn-secondary">✉️ Отправить на почту</button>
+            <div id="copyMessage" class="copy-message"></div>
             <div class="back-link"><button id="backFromContacts">← Назад</button></div>
-            <div id="msg" class="success-message"></div>
         </div>
     </div>
+</div>
+
+<!-- ПЛАВАЮЩАЯ ПАНЕЛЬ КОНТАКТОВ (ВИДНА НА ВСЕХ СТРАНИЦАХ) -->
+<div class="floating-contacts">
+    <span>📞 +7 993 205 05 25</span>
+    <span>✉️ mirovik@mir-ovik.ru</span>
+    <a href="https://t.me/MIR_OVIK" target="_blank">📨 Telegram</a>
+    <a href="https://max.ru/u/f9LHodD0cOLP8CX4rPVjaENws-ws6N3fFI9na-5_-cGhHAmCQ-nQ9ZPkneY" target="_blank">🔗 Max</a>
 </div>
 
 <script>
@@ -582,7 +619,6 @@
                 </div>
             `;
             container.appendChild(div);
-            // Сохраняем данные при вводе
             const wInput = div.querySelector(`.hood-w-${i}`);
             const lInput = div.querySelector(`.hood-l-${i}`);
             const hInput = div.querySelector(`.hood-h-${i}`);
@@ -601,7 +637,6 @@
         const kitchenBlock = document.getElementById('kitchenBlock');
         if (kitchenBlock) kitchenBlock.style.display = isKitchen ? 'block' : 'none';
         
-        // Сброс состояния зонтов
         const hoodsSection = document.getElementById('hoodsSection');
         if (hoodsSection) hoodsSection.classList.remove('show');
         const hasHoodsCheck = document.getElementById('hasHoods');
@@ -756,44 +791,22 @@ ${paramsText}${hoodsText}
   • Комментарий: ${comment}`;
     }
 
-    // ФОРМИРОВАНИЕ ССЫЛКИ ДЛЯ ПОЧТЫ
-    function getMailLink() {
-        const userName = document.getElementById('userName');
-        const userEmail = document.getElementById('userEmail');
-        const userCity = document.getElementById('userCity');
-        const userPhone = document.getElementById('userPhone');
-        const userComment = document.getElementById('userComment');
-        
-        const name = userName ? userName.value.trim() : '';
-        const email = userEmail ? userEmail.value.trim() : '';
-        const city = userCity ? userCity.value.trim() : '';
-        const phone = userPhone ? userPhone.value.trim() : '';
-        const comment = userComment ? userComment.value.trim() : '';
-        
-        let paramsText = '';
-        if (currentParams.capacity) {
-            paramsText = `${currentParams.capacity} м³/ч, ${currentParams.pressure || '?'} Па`;
-        } else {
-            paramsText = `${currentParams.roomW || '?'}×${currentParams.roomL || '?'}×${currentParams.roomH || '?'} м, ${currentParams.distance || '?'} м`;
-        }
-        
-        let hoodsText = '';
-        if (currentParams.hasHoods) {
-            hoodsText = `\nЗонты: ${currentParams.hoodsCount || 0} шт.`;
-        }
-        
-        const body = `Новая заявка с сайта\n\nТип: ${currentEquipment}\nПараметры: ${paramsText}${hoodsText}\nПринадлежности: ${selectedAccessories.join(', ') || 'нет'}\n\nКонтакты:\nИмя: ${name}\nEmail: ${email}\nГород: ${city}\nТелефон: ${phone}\nКомментарий: ${comment}`;
-        return `mailto:mirovik@mir-ovik.ru?subject=${encodeURIComponent(`Заявка: ${currentEquipment}`)}&body=${encodeURIComponent(body)}`;
-    }
-
-    function showMessage(text, isError = false) {
-        const msg = document.getElementById('msg');
-        if (msg) {
-            msg.innerHTML = text;
-            msg.classList.add('show');
-            msg.style.background = isError ? '#fee2e2' : '#d1fae5';
-            msg.style.color = isError ? '#991b1b' : '#065f46';
-            setTimeout(() => msg.classList.remove('show'), 3500);
+    function showCopyMessage() {
+        const msgDiv = document.getElementById('copyMessage');
+        if (msgDiv) {
+            msgDiv.innerHTML = `
+                ✅ <strong>Заявка скопирована!</strong><br><br>
+                📨 <a href="https://t.me/MIR_OVIK" target="_blank">Telegram</a> &nbsp;|&nbsp;
+                ✉️ <a href="mailto:mirovik@mir-ovik.ru">Email</a> &nbsp;|&nbsp;
+                🔗 <a href="https://max.ru/u/f9LHodD0cOLP8CX4rPVjaENws-ws6N3fFI9na-5_-cGhHAmCQ-nQ9ZPkneY" target="_blank">Max</a>
+                <div class="copy-instruction">
+                    👇 Нажмите на нужный способ отправки и вставьте заявку (Ctrl+V)
+                </div>
+            `;
+            msgDiv.classList.add('show');
+            setTimeout(() => {
+                msgDiv.classList.remove('show');
+            }, 10000);
         }
     }
 
@@ -830,18 +843,16 @@ ${paramsText}${hoodsText}
         card.addEventListener('click', () => {
             currentEquipment = card.getAttribute('data-equipment');
             if (currentEquipment === "Принадлежности к вентиляции") {
-                // Сразу переходим к выбору принадлежностей
                 currentParams = {};
                 selectedAccessories = [];
                 renderAccessories();
                 page1.classList.remove('active');
                 pageAcc.classList.add('active');
             } else {
-                // Переходим на страницу параметров
                 renderPage2();
                 page1.classList.remove('active');
                 page2.classList.add('active');
-                initModeSwitch(); // Активируем переключатель режимов
+                initModeSwitch();
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
@@ -907,7 +918,6 @@ ${paramsText}${hoodsText}
 
     // 4. КНОПКИ НА СТРАНИЦЕ КОНТАКТОВ
     const copyBtn = document.getElementById('copyBtn');
-    const emailBtn = document.getElementById('emailBtn');
     const backFromContactsBtn = document.getElementById('backFromContacts');
 
     if (copyBtn) {
@@ -916,28 +926,14 @@ ${paramsText}${hoodsText}
             const email = document.getElementById('userEmail');
             const city = document.getElementById('userCity');
             if (!name.value.trim() || !email.value.trim() || !city.value.trim()) {
-                showMessage('❌ Заполните обязательные поля: Имя, Email, Город', true);
+                alert('❌ Заполните обязательные поля: Имя, Email, Город');
                 return;
             }
             navigator.clipboard.writeText(getOrderText()).then(() => {
-                showMessage('✅ Заявка скопирована! Отправьте её в Telegram или по почте.');
+                showCopyMessage();
             }).catch(() => {
-                showMessage('❌ Не удалось скопировать. Попробуйте вручную.', true);
+                alert('❌ Не удалось скопировать. Попробуйте вручную.');
             });
-        });
-    }
-
-    if (emailBtn) {
-        emailBtn.addEventListener('click', () => {
-            const name = document.getElementById('userName');
-            const email = document.getElementById('userEmail');
-            const city = document.getElementById('userCity');
-            if (!name.value.trim() || !email.value.trim() || !city.value.trim()) {
-                showMessage('❌ Заполните обязательные поля: Имя, Email, Город', true);
-                return;
-            }
-            window.location.href = getMailLink();
-            showMessage('✉️ Открывается почтовый клиент. Отправьте письмо менеджеру.');
         });
     }
 
